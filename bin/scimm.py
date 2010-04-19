@@ -12,7 +12,7 @@ import imm_cluster, util
 # Author: David Kelley
 ############################################################
 
-scimm_bin = "help"
+scimm_bin = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/bin"
 
 ############################################################
 # main
