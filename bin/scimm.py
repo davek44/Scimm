@@ -1,4 +1,5 @@
-#!/fs/sz-user-supported/Linux-i686/bin/python2.5
+#!/usr/bin/env python
+
 from optparse import OptionParser
 import os, glob, subprocess, math
 import imm_cluster, util

@@ -1,4 +1,5 @@
-#!/fs/sz-user-supported/Linux-i686/bin/python2.5
+#!/usr/bin/env python
+
 from __future__ import division
 from optparse import OptionParser
 import sys, os, subprocess, glob, random, math, util, pdb
