@@ -1,0 +1,87 @@
+SYSTEM REQUIREMENTS:
+
+- You'll need a local copy of the standalone BLAST
+  software; this can be downloaded for your local
+  platform from
+   
+ ftp://ftp.ncbi.nih.gov/blast/executables/release/NEWEST_VERSION
+
+  where NEWEST_VERSION represents the most recent
+  version number.  (Navigate to the "release"
+  directory to find out what the most recent version
+  number is.)
+
+- At least 50GB of disk space should be available
+  for installation.
+
+- 1GB of free memory is preferred; 750MB will suffice;
+  500MB or less will likely cause problems.
+
+- You'll need to have a relatively modern version
+  of Perl installed, including the Net::FTP package.
+
+INSTALLATION:
+
+To install, run "phymmInstall.pl" from this directory.
+
+The installer will download all the current bacterial &
+archaeal genomic data from RefSeq, set up needed metadata,
+and build the IMMs that comprise the core of the Phymm system.
+
+It'll also build a local BLAST database representing
+all the genomic data from RefSeq.
+
+TO CLASSIFY READS:
+
+With your set of query reads saved into a multi-FASTA
+file (make sure each read has a *unique* identifier
+immediately following the '>' on its comment line),
+run "scoreReads.pl <query-read file>".  Result files
+will be generated for Phymm, BLAST (using the local
+database constructed during installation), and PhymmBL
+(a weighted combination of the two designed to maximize
+accuracy).
+
+NOTES:
+
+Please note that the IMM-construction portion of
+installation is particularly computationally intensive;
+full installation (including ICM construction) took
+about 24 hours on an Altus 3400 server with a 4x Opteron
+850 processor, 32GB of memory, and no significant
+competing processes running during that time.
+
+Breakdown of our test installation, on the server
+described above, measured in wall-clock time:
+
+   BEGIN			       00h 00m 00s
+   
+   RefSeq download complete	       00h 15m 43s
+   
+   .genomeData/ directory populated
+   with downloaded data, organism
+   directory-names standardized,
+   taxonomic metadata files for
+   Phymm generated, and included
+   GLIMMER code compiled	       00h 41m 10s
+
+   IMM construction complete	       22h 56m 14s
+
+   local BLAST database construction
+   complete (END)		       23h 00m 34s
+
+Note that after the installer has assessed whether it
+should use a new copy of the RefSeq data or work from
+an existing one, the interactive portion of the installation
+is complete, and you won't need to actively monitor the
+installation.
+
+For classification, note that Phymm runs in time comparable
+to BLAST; 5,730 100-bp query reads took 36.3 minutes to
+classify with Phymm, and the same set took 26.9 minutes to
+search for matches in the local database using BLAST.
+
+Combining scores to find the best consensus match for
+each read (i.e., the final, PhymmBL, step) will require
+500-700MB of free memory.
+
