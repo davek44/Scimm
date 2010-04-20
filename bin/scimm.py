@@ -27,14 +27,14 @@ def main():
     parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters')
 
     # likelybin options
-    parser.add_option('--ls', dest='lb_starts', type='int', default=0, help='Number of random LikelyBin starts')
+    parser.add_option('--ls', dest='lb_starts', type='int', default=1, help='Number of random LikelyBin starts')
     parser.add_option('--ln', dest='lb_numreads', type='int', default=3000, help='Number of reads to sample for LikelyBin')
     parser.add_option('--lt', dest='lb_threads', type='int', default=2, help='Number of LikelyBin threads per start, and CPUs for imm_cluster')
     parser.add_option('--lo', dest='lb_order', type='int', default=3, help='Order of LikelyBin Markov model')
 
     # compostbin options
-    parser.add_option('--cs', dest='cb_starts', type='int', default=0, help='Number of random CompostBin starts')
-    parser.add_option('--cn', dest='cb_numreads', type='int', default=10000, help='Number of reads to sample for CompostBin')
+    parser.add_option('--cs', dest='cb_starts', type='int', default=1, help='Number of random CompostBin starts')
+    parser.add_option('--cn', dest='cb_numreads', type='int', default=3000, help='Number of reads to sample for CompostBin')
     parser.add_option('--ct', dest='cb_threads', type='int', default=1, help='Number of CPUs for imm_cluster')
     parser.add_option('--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin')
 
