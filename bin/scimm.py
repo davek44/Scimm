@@ -61,7 +61,7 @@ def main():
                 if j + options.lb_threads <= options.proc:
                     # make a temp dir to compute in and cd to it
                     temp_dir('tmp.start%d' % i)                    
-                    p.append(subprocess.Popen('lb_init.py -r %s -n %d -k %d -o %d -p %d %s' % (options.readsf, options.lb_numreads, options.k, options.lb_order, options.lb_threads, em), shell=True))
+                    p.append(subprocess.Popen('%s/lb_init.py -r %s -n %d -k %d -o %d -p %d %s' % (scimm_bin, options.readsf, options.lb_numreads, options.k, options.lb_order, options.lb_threads, em), shell=True))
                     os.chdir('..')
                     i += 1
                 elif j == 0:
@@ -76,7 +76,7 @@ def main():
                 if j + options.cb_threads <= options.proc:
                     # make a temp dir to compute in and cd to it
                     temp_dir('tmp.start%d' % i)                    
-                    p.append(subprocess.Popen('cb_init.py -r %s -n %d -k %d -m %d -p %d %s' % (options.readsf, options.cb_numreads, options.k, options.cb_mers, options.cb_threads, em), shell=True))
+                    p.append(subprocess.Popen('%s/cb_init.py -r %s -n %d -k %d -m %d -p %d %s' % (scimm_bin, options.readsf, options.cb_numreads, options.k, options.cb_mers, options.cb_threads, em), shell=True))
                     os.chdir('..')
                     i += 1
                 elif j == 0:
