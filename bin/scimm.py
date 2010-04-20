@@ -107,6 +107,7 @@ def main():
     # run imm clustering completely
     os.system('%s/imm_cluster.py -k %d -r %s -p %d -i --trained %s &> immc.log' % (scimm_bin, new_k, options.readsf, options.proc, em))
 
+
 ############################################################
 # temp_dir
 #
@@ -149,7 +150,7 @@ def maxlike_clusters(total_starts, readsf, k, soft_assign):
             max_clust = i
 
     # get files from max
-    os.system('cp tmp.start%d/* .' % max_clust)
+    os.system('cp tmp.start%d/cluster-*.fa tmp.start%d/icm-*scores.tmp .' % (max_clust,max_clust))
 
 
 ############################################################
@@ -186,9 +187,7 @@ def minentropy_clusters(total_starts, readsf, k, soft_assign):
     (min_entropy, min_clust) = util.min_i(entropy)
 
     # get files from min
-    os.system('cp tmp.start%d/* .' % min_clust)
-    if os.path.isfile('kmers.dat'):
-        os.system('rm kmers.dat')
+    os.system('cp tmp.start%d/cluster-*.fa tmp.start%d/icm-*scores.tmp .' % (min_clust,min_clust))
 
 
 ############################################################
