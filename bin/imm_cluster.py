@@ -2,7 +2,8 @@
 
 from __future__ import division
 from optparse import OptionParser
-import sys, os, subprocess, glob, random, math, util, pdb
+import sys, os, glob, random, math, util, pdb
+import scimm
 
 ############################################################
 # imm_cluster.py
@@ -65,7 +66,7 @@ def main():
 
         if options.seed_only:
             # train on all sequences for fair likelihood comparisons
-            train_icm(k, options.soft_assign, options.par)
+            train_imm(k, options.soft_assign, options.par)
             # score each read with each IMM
             score_reads(k, options.reads_file, options.par)
             exit()
@@ -90,7 +91,7 @@ def main():
                 
         if iter > 1 or not options.trained:
             # train an IMM on each cluster
-            train_icm(k, options.soft_assign, options.par)
+            train_imm(k, options.soft_assign, options.par)
         
             # score each read with each IMM
             score_reads(k, options.reads_file, options.par)
@@ -119,9 +120,9 @@ def train_imm(k, soft_assign, par):
     cmds = []
     for i in range(k):
         if soft_assign:
-            cmds.append('em_build-icm -p 1 cluster-%d.icm < cluster-%d.build.fa' % (i,i))
+            cmds.append('%s/em_build-icm -p 1 cluster-%d.icm < cluster-%d.build.fa' % (scimm.scimm_bin,i,i))
         else:
-            cmds.append('build-icm -p 1 cluster-%d.icm < cluster-%d.fa' % (i,i))
+            cmds.append('%s/build-icm -p 1 cluster-%d.icm < cluster-%d.fa' % (scimm.scimm_bin,i,i))
 
     util.exec_par(cmds, par)
 
@@ -134,7 +135,7 @@ def train_imm(k, soft_assign, par):
 def score_reads(k, readsf, par):
     cmds = []
     for c in range(k):
-        cmds.append('simple-score -N cluster-%d.icm < %s > icm-%d.scores.tmp 2>/dev/null' % (c,readsf,c))
+        cmds.append('%s/simple-score -N cluster-%d.icm < %s > icm-%d.scores.tmp 2>/dev/null' % (scimm.scimm_bin,c,readsf,c))
     
     util.exec_par(cmds, par)
 
@@ -442,7 +443,7 @@ def correct_partition_simXC(reads_dir, k):
 ############################################################
 def seed_partition(readsf, k, mates, constraints, soft_assign, par):
     # train IMMs
-    train_icm(k, soft_assign, par)
+    train_imm(k, soft_assign, par)
 
     # score all reads
     score_reads(k, readsf, par)

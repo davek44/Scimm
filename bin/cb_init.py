@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 import os, glob, subprocess
-import scimm
+import scimm, dna
 
 ############################################################
 # cb_init.py
@@ -34,7 +34,7 @@ def main():
         if line[0] == '>':
             total_reads += 1
     if options.numreads and options.numreads < total_reads:
-        os.system('fasta_rand.py -r %s -n %d > sample.fa' % (options.readsf, options.numreads))
+        dna.fasta_rand(options.numreads, options.readsf, 'sample.fa')
     else:
         os.system('ln -s %s sample.fa' % options.readsf)
 

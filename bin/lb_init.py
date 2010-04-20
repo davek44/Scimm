@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 import os, glob, util, subprocess, pdb
-import scimm, imm_cluster
+import scimm, imm_cluster, dna
 
 ############################################################
 # lb_init.py
@@ -34,12 +34,12 @@ def main():
         if line[0] == '>':
             total_reads += 1
     if options.numreads and options.numreads < total_reads:
-        os.system('fasta_rand.py -r %s -n %d > sample.fa' % (options.readsf, options.numreads))
+        dna.fasta_rand(options.numreads, options.readsf, 'sample.fa')
     else:
         os.system('ln -s %s sample.fa' % options.readsf)
 
     # LikelyBin
-    os.system('mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d' % (options.k, options.order, options.proc))
+    os.system('%s/mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d' % (scimm.scimm_bin,options.k, options.order, options.proc))
 
     if os.path.isfile('sample.fa.binning.allprobs') and os.path.getsize('sample.fa.binning.allprobs') > 0:
 

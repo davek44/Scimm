@@ -13,6 +13,10 @@ import imm_cluster, util
 ############################################################
 
 scimm_bin = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/bin"
+if 'PYTHONPATH' in os.environ:
+    os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + scimm_bin
+else:
+    os.environ['PYTHONPATH'] = scimm_bin
 
 ############################################################
 # main
@@ -101,7 +105,7 @@ def main():
     new_k = determine_k(options.soft_assign, options.k)
 
     # run imm clustering completely
-    os.system('imm_cluster.py -k %d -r %s -p %d -i --trained %s &> immc.log' % (new_k, options.readsf, options.proc, em))
+    os.system('%s/imm_cluster.py -k %d -r %s -p %d -i --trained %s &> immc.log' % (scimm_bin, new_k, options.readsf, options.proc, em))
 
 ############################################################
 # temp_dir

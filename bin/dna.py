@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # no __future__ division!
-import string, sys, math
+import string, sys, math, random
 
 ############################################################
 # fasta
@@ -136,6 +136,41 @@ def canonical_kmers(kmers, return_all=False):
                 canon_kmers[kmer] = canon_kmers[rc(kmer)]
 
     return canon_kmers
+
+
+############################################################
+# fasta_rand
+#
+# Randomly sample 'num_seq' sequences from a multi-fasta
+# file, with an option to draw pairs of mates.
+############################################################
+def fasta_rand(num_seq, reads_file, out_file, mates_file=''):
+    random.seed()
+
+    seqs = fasta2dict(reads_file)
+
+    out = open(out_file, 'w')
+    
+    if mates_file:
+        # get mates
+        mates = {}
+        for line in open(mates_file):
+            (lr,rr) = line.split()
+            mates[lr] = rr
+            mates[rr] = lr
+
+        # sample from left reads, print both
+        for h in random.sample(mates.keys(), num_seq/2):
+            print >> out, '>%s' % h
+            print >> out, seqs[h]
+            print >> out, '>%s' % mates[h]
+            print >> out, seqs[mates[h]]
+
+    else:
+        # sample from all
+        for h in random.sample(seqs.keys(), num_seq):
+            print >> out, '>%s' % h
+            print >> out, seqs[h]
 
 
 ############################################################
