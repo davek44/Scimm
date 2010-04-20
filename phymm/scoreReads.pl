@@ -116,25 +116,10 @@ while ( my $line = <IN> ) {
 close IN;
 
 ############################################################
-# DK addition
+# Make a list of ICMs to ignore from $ignoreFile
 #
-# Version 1 took the ICMs to ignore from the read headers.
-#
-# Version 2 takes a list of ICMs to ignore from a file, so
-# its up to the user to provide that list.  This offers
-# more flexibility.
+# Author: David Kelley
 ############################################################
-#open(READSF, $dataFile);
-#my %ignore_icms = ();
-#my $species;
-#my @sptmp;
-#while (<READSF>) {
-#    if(substr($_, 0, 1) eq ">") {	
-#	@sptmp = split(/\|/);
-#	$species = substr($sptmp[0],1);
-#	$ignore_icms{$species} = 1;
-#    }
-#}
 open(IGNOREF, $ignoreFile);
 my %ignore_icms = ();
 print "Ignoring ICMS:\n";
@@ -143,7 +128,6 @@ while(<IGNOREF>) {
     $ignore_icms{$_} = 1;
     print $_, "\n";
 }
-
 ############################################################
 
 
@@ -178,7 +162,9 @@ print LOG "Scoring reads with Phymm...\n\n";
 foreach my $ICM ( sort { $a cmp $b } @ICMs ) {
 
    ########################################
-   # DK addition
+   # Ignore ICM if its in our hash
+   #
+   # Author: David Kelley
    ########################################
    $ICM =~ /genomeData\/(\S+)\//;
    if(exists($ignore_icms{$1})) {
@@ -309,7 +295,14 @@ system("rm errFile_${outputPrefix}.txt");
 
 print "done.\n\n";
 
+
+############################################################
+# Skip BLAST
+#
+# Author: David Kelley
+############################################################
 exit 0;
+############################################################
 
 # Score the query data using BLAST.
 
@@ -549,10 +542,10 @@ print "done.\n\n";
 
 
 ############################################################
-# DK addition
-#
 # No plasmids!  Only train on largest fasta file in each
 # strain directory
+#
+# Author: David Kelley
 ############################################################
 sub scanDir {
    
@@ -591,3 +584,4 @@ sub scanDir {
    push @$arrayRef, "$dir/$maxicm";
 }
 
+############################################################
