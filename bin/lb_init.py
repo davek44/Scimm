@@ -50,7 +50,7 @@ def main():
         new_k = drop_empty(options.k, options.soft_assign)
     
         # run seed_only
-        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s &>> lb.log' % (scimm.scimm_bin, new_k, options.readsf, options.proc, em))
+        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s >> lb.log' % (scimm.scimm_bin, new_k, options.readsf, options.proc, em))
 
 ############################################################
 # init_clusters.py
