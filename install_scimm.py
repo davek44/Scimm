@@ -38,7 +38,8 @@ def main():
         os.chdir('..')
 
     # CBCBCompostBin
-    os.system('sed -i \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py' % installdir)
+    os.system('sed -i .bak \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py' % installdir)
+    os.system('rm CBCBCompostBin/compostbin.py.bak')
     if not os.path.isfile('bin/compostbin.py'):
         os.chdir('bin')
         os.system('ln -s ../CBCBCompostBin/compostbin.py')
@@ -46,6 +47,7 @@ def main():
 
     # Scimm
     os.system('sed -i \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
+    os.system('rm bin/scimm.py.bak')
     
 
 ############################################################

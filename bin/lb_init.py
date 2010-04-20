@@ -39,7 +39,7 @@ def main():
         os.system('ln -s %s sample.fa' % options.readsf)
 
     # LikelyBin
-    os.system('%s/mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d' % (scimm.scimm_bin,options.k, options.order, options.proc))
+    os.system('%s/mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d &> lb.log' % (scimm.scimm_bin,options.k, options.order, options.proc))
 
     if os.path.isfile('sample.fa.binning.allprobs') and os.path.getsize('sample.fa.binning.allprobs') > 0:
 
@@ -50,7 +50,7 @@ def main():
         new_k = drop_empty(options.k, options.soft_assign)
     
         # run seed_only
-        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s &> lb.log' % (scimm.scimm_bin, new_k, options.readsf, options.proc, em))
+        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s &>> lb.log' % (scimm.scimm_bin, new_k, options.readsf, options.proc, em))
 
 ############################################################
 # init_clusters.py

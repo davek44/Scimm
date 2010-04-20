@@ -319,8 +319,9 @@ static int  Read_String
 
 static double extract_prob(char* tag)
 {
+  char prob_char[20];
   char* end = strchr(tag, ';');
-  char* prob_char = strndup(tag, end-tag);
+  strncat(prob_char, tag, end-tag);
   return(atof(prob_char));
 }
 

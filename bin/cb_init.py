@@ -39,13 +39,13 @@ def main():
         os.system('ln -s %s sample.fa' % options.readsf)
 
     # CompostBin
-    os.system('%s/compostbin.py -r sample.fa -c %d -k %d' % (scimm.scimm_bin, options.clusters, options.mers))
+    os.system('%s/compostbin.py -r sample.fa -c %d -k %d &> cb.log' % (scimm.scimm_bin, options.clusters, options.mers))
 
     # initialize clusters
     init_clusters(options.readsf, options.clusters, options.soft_assign)
 
     # run seed_only
-    os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s &> cb.log' % (scimm.scimm_bin, options.clusters, options.readsf, options.proc, em))
+    os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s &>> cb.log' % (scimm.scimm_bin, options.clusters, options.readsf, options.proc, em))
     
 
 ############################################################
