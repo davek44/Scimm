@@ -1,11 +1,11 @@
 Scimm is an unsupervised method to cluster sequences using
 interpolated Markov models.  Scimm is initialized by clustering with
-LikelyBin and my version of CompostBin.  Physcimm is a partially
+LikelyBin and my version of CompostBin.  PhyScimm is a partially
 supervised method that uses Phymm to initialize Scimm.
 
 Reference:
 Kelley, DR and Salzberg, SL.  Clustering metagenomic sequences with
-interpolated Markov models.  (to appear)
+interpolated Markov models.  (under review)
 
-Website:
+Website (w/ manual):
 http://www.cbcb.umd.edu/software/scimm
