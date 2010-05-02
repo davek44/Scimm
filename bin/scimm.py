@@ -25,9 +25,9 @@ def main():
     parser = OptionParser()
 
     # generic options
-    parser.add_option('-r', dest='readsf', help='Fasta file of reads')
+    parser.add_option('-s','-r', dest='readsf', help='Fasta file of sequences')
     parser.add_option('-k', dest='k', type='int', help='Number of clusters')
-    parser.add_option('-p', dest='proc', type='int', help='Number of processes to run')
+    parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run')
     parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters')
 
     # likelybin options
@@ -40,7 +40,7 @@ def main():
     parser.add_option('--cs', dest='cb_starts', type='int', default=1, help='Number of random CompostBin starts')
     parser.add_option('--cn', dest='cb_numreads', type='int', default=3000, help='Number of reads to sample for CompostBin')
     parser.add_option('--ct', dest='cb_threads', type='int', default=1, help='Number of CPUs for imm_cluster')
-    parser.add_option('--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin')
+    parser.add_option('--co','--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin')
 
     (options, args) = parser.parse_args()
 
