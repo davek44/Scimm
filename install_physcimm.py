@@ -15,11 +15,9 @@ prior_phymm_dir = ''
 # main
 ############################################################
 def main():
-    print 'Please note that this will install Phymm, which \
-           will likely take ~24 hours and use ~50 GB of \
-           space. If you already have Phymm installed, \
-           edit this script and set "prior_phymm_dir" to \
-           the package directory path'
+    status = raw_input('Please note that this will install Phymm,\nwhich will likely take ~24 hours and use\n~50 GB of space. If you already have Phymm\ninstalled, edit this script and set\n"prior_phymm_dir" to the package directory\npath.\nContinue? [y/n] ')
+    if status == 'n' or status == 'N':
+        exit()
 
     installdir = os.getcwd()
 
