@@ -117,11 +117,9 @@ def phymm_parallel(pid, proc, origdir, ignoref):
     cmds = []
     for i in range(proc):
         if ignoref:
-            print './scoreReads.pl sample%d.fa.%d %s' % (pid,i,ignoref)
-            cmds.append('./scoreReads.pl sample%d.fa.%d %s' % (pid,i,ignoref))
+            cmds.append('./scoreReads.pl sample%d.fa.%d %s 2> /dev/null' % (pid,i,ignoref))
         else:
-            print './scoreReads.pl sample%d.fa.%d' % (pid,i)
-            cmds.append('./scoreReads.pl sample%d.fa.%d' % (pid,i))
+            cmds.append('./scoreReads.pl sample%d.fa.%d 2> /dev/null' % (pid,i))
     util.exec_par(cmds, proc)
 
     # collect output
@@ -140,14 +138,16 @@ def init_clusters(readsf, taxlevel, minbp, soft_assign):
     class2index = {'species':1, 'genus':3, 'family':4, 'order':5, 'class':6, 'phylum':7}
     col = class2index[taxlevel.lower()]
 
-    # get read sizes
+    # get read sizes and map between Phymm headers and true headers
     readbp = {}
+    phymm2true = {}
     for line in open(readsf):
         if line[0] == '>':
             header = line[1:].rstrip()
             readbp[header] = 0
+            phymm2true[header.split()[0]] = header
         else:
-            readbp[header] += len(line.rstrip())
+            readbp[header] += len(line.rstrip())    
 
     # fill clusters with reads
     clusters = {}
@@ -156,13 +156,15 @@ def init_clusters(readsf, taxlevel, minbp, soft_assign):
         a = line.split('\t')
         a[-1] = a[-1].rstrip()
 
-        if a[0] != 'QUERY_ID' and a[col]: # some species are missing classifications            
+        if a[0] != 'QUERY_ID' and a[col]: # some species are missing classifications
+            header = phymm2true[a[0]]
+
             if clusters.has_key(a[col]):
-                clusters[a[col]].append(a[0])
-                clustbp[a[col]] += readbp[a[0]]
+                clusters[a[col]].append(header)
+                clustbp[a[col]] += readbp[header]
             else:
-                clusters[a[col]] = [a[0]]
-                clustbp[a[col]] = readbp[a[0]]
+                clusters[a[col]] = [header]
+                clustbp[a[col]] = readbp[header]
 
     # extra cluster for deleted classes
     clusters['extra'] = []
@@ -206,7 +208,7 @@ def init_clusters(readsf, taxlevel, minbp, soft_assign):
     for line in open(readsf):
         if line[0] == '>':
             r = line[1:].rstrip()
-            if read2cluster.has_key(r):                
+            if read2cluster.has_key(r):
                 c = read2cluster[r]
                 init_files[c].write(line)
                 if soft_assign:

@@ -122,11 +122,11 @@ close IN;
 ############################################################
 open(IGNOREF, $ignoreFile);
 my %ignore_icms = ();
-print "Ignoring ICMS:\n";
+#print "Ignoring ICMS:\n";
 while(<IGNOREF>) {
     chomp;
     $ignore_icms{$_} = 1;
-    print $_, "\n";
+    #print $_, "\n";
 }
 ############################################################
 
@@ -170,7 +170,7 @@ foreach my $ICM ( sort { $a cmp $b } @ICMs ) {
    if(exists($ignore_icms{$1})) {
        next;
    }
-   print $1, "\n";
+   #print $1, "\n";
    ########################################
    
    my $icmPrefix = $ICM;
@@ -301,7 +301,7 @@ print "done.\n\n";
 #
 # Author: David Kelley
 ############################################################
-exit 0;
+#exit 0;
 ############################################################
 
 # Score the query data using BLAST.
