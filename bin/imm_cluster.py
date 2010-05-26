@@ -173,7 +173,7 @@ def reassign_reads(readsf, priors, mates, constraints, soft_assign, initial_seed
         # reassign
         for line in open('cluster-%d.fa' % c):
             if line[0] == '>':
-                r = line.split()[0][1:]
+                r = line[1:].strip()  # remove front spaces
                 if not read_probs.has_key(r):
                     print 'ERROR: missing read %s scores' % r
                     exit()
@@ -241,7 +241,7 @@ def update_priors(prev_priors, readsf, mates, constraints, soft_assign):
     exp_bp = [0]*k
     for line in open(readsf):
         if line[0] == '>':
-            r = line[1:].rstrip()
+            r = line[1:].strip()  # ignore front space too
         else:
             for c in range(k):
                 exp_bp[c] += read_probs[r][c]*len(line.rstrip())
@@ -264,7 +264,8 @@ def get_read_probs(priors, mates, constraints, soft_assign):
     read_likes = {}
     for c in range(k):
         for line in open('icm-%d.scores.tmp' % c):
-            (r,s) = line.split()
+            (r,s) = line.split('\t')
+            r = r.strip()
             if not read_likes.has_key(r):
                 read_likes[r] = [0]*k
             read_likes[r][c] = float(s)
@@ -284,11 +285,9 @@ def get_read_probs(priors, mates, constraints, soft_assign):
             if mates.has_key(r):
                 r1 = read_likes[r]
                 r2 = read_likes[mates[r]['mate']]
-                #read_scores = [r1[x]+r2[x]+priors[x] for x in range(k)]
                 read_scores = [r1[x]+r2[x]+math.log(priors[x]) for x in range(k)]
             else:
                 r1 = read_likes[r]
-                #read_scores = [r1[x]+priors[x] for x in range(k)]
                 read_scores = [r1[x]+math.log(priors[x]) for x in range(k)]
 
             # determine probabilities of assignments
@@ -346,7 +345,7 @@ def random_partition(reads_file, reads_dir, k, mates, soft_assign):
         for line in open(readf):
             if line[0] == '>':
                 # keep mates together
-                header = line.split()[0][1:]
+                header = line.rstrip()[1:]
                 if mates.has_key(header):
                     m = mates[header]
 
@@ -501,7 +500,6 @@ def constraint_seed(reads_file, k, mates, constraints, soft_assign):
             exit()        
 
 
-
 ############################################################
 # verify_constraints
 #
@@ -599,7 +597,7 @@ def load_mates(matef):
     mates = {}
     if matef:
         for line in open(matef):
-            (r1,r2) = line.split()
+            (r1,r2) = line.split('\t')
             mates[r1] = {'mate':r2, 'cluster':-1, 'scores':[]}
             mates[r2] = {'mate':r1, 'cluster':-1, 'scores':[]}
     return mates
@@ -613,7 +611,7 @@ def load_constraints(constrainf):
     constraints = {}
     if constrainf:
         for line in open(constrainf):
-            (r,c) = line.split()
+            (r,c) = line.split('\t')
             constraints[r] = int(c)
     return constraints
 

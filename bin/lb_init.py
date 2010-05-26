@@ -34,7 +34,7 @@ def main():
         if line[0] == '>':
             total_reads += 1
     if options.numreads and options.numreads < total_reads:
-        dna.fasta_rand(options.numreads, options.readsf, 'sample.fa')
+        dna.fasta_rand_big(options.numreads, options.readsf, 'sample.fa')
     else:
         os.system('ln -s %s sample.fa' % options.readsf)
 
@@ -126,7 +126,7 @@ def init_clusters(readsf, soft_assign):
     # read fasta to cluster-*.fa
     for line in open(readsf):
         if line[0] == '>':
-            r = line[1:].rstrip()
+            r = line[1:].strip()  # front spaces are removed by LikelyBin
             if hard_clusters.has_key(r):
                 hc = hard_clusters[r]
                 init_files[hc].write(line)

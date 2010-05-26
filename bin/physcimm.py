@@ -7,7 +7,7 @@ import scimm, util, dna
 # physcimm.py
 #
 # Sequence Clustering with Interpolated Markov Models using
-# classification with Phymm to initialize
+# classification with Phymm to initialize.
 #
 # Author: David Kelley
 ############################################################
@@ -31,8 +31,12 @@ def main():
     parser.add_option('-n','--numreads', dest='numreads', type='int', default=3000, help='Number of reads to sample from the data set to classify with Phymm')
     parser.add_option('-i', dest='ignore', help='Ask Phymm to ignore the IMMs in the given file')
     parser.add_option('--init', dest='init', action='store_true', default=False, help='Just initialize the clusters with Phymm; do not run cluster with IMMs')
+    #parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
 
     (options, args) = parser.parse_args()
+
+    # check data
+    data_integrity(options.readsf)
     
     # make robust to directory changes
     options.readsf = os.path.abspath(options.readsf)
@@ -61,7 +65,7 @@ def main():
         if line[0] == '>':
             total_reads += 1
     if options.numreads and options.numreads < total_reads:
-        dna.fasta_rand(options.numreads, options.readsf, 'sample%d.fa' % pid)
+        dna.fasta_rand_big(options.numreads, options.readsf, 'sample%d.fa' % pid)
     else:
         os.system('ln -s %s sample%d.fa' % (options.readsf,pid))
         options.numreads = total_reads
@@ -87,7 +91,22 @@ def main():
 
     # run IMM clustering
     if not options.init:
-        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> scimm.trail' % (scimm.scimm_bin,class_k, options.readsf, options.proc, em))
+        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> immc.log' % (scimm.scimm_bin,class_k, options.readsf, options.proc, em))
+
+
+############################################################
+# data_integrity
+#
+# Check for uniqueness of headers.
+############################################################
+def data_integrity(readsf):
+    reads = {}
+    for line in open(readsf):
+        r = line[1:].split()[0]
+        if reads.has_key(r):
+            print 'Sorry, Phymm only considers fasta headers up to the first whitespace.  Please make these unique in your file'
+            exit()
+        reads[r] = True
 
 
 ############################################################

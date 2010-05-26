@@ -34,7 +34,7 @@ def main():
         if line[0] == '>':
             total_reads += 1
     if options.numreads and options.numreads < total_reads:
-        dna.fasta_rand(options.numreads, options.readsf, 'sample.fa')
+        dna.fasta_rand_big(options.numreads, options.readsf, 'sample.fa')
     else:
         os.system('ln -s %s sample.fa' % options.readsf)
 

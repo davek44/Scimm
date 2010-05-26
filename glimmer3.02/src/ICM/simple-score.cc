@@ -66,8 +66,9 @@ int  main
       int  len;
 
       string_num ++;
-      len = strlen (string);
-      token = strtok (tag, " \t\n");
+      len = strlen (string);      
+      //token = strtok (tag, " \t\n");  by David Kelley
+      token = strtok (tag, "\t\n");
 
       pos_score = pos_model . Score_String (string, len, 1);
       if  (! Use_Null_Neg_Model)
@@ -75,10 +76,10 @@ int  main
         else
           neg_score = 0.0;
 
-      printf ("%-20s ", token);
+      printf ("%-20s\t", token);
       if  (Include_Total)
           printf (" %11.4f %11.4f", pos_score, neg_score);
-      printf (" %11.4f", pos_score - neg_score);
+      printf ("%11.4f", pos_score - neg_score);
       if  (Include_Per_Base)
           {
            double  pb;

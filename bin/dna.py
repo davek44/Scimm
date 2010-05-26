@@ -174,6 +174,55 @@ def fasta_rand(num_seq, reads_file, out_file, mates_file=''):
 
 
 ############################################################
+# fasta_rand_big
+#
+# Randomly sample 'num_seq' sequences from a multi-fasta
+# file, without loading the sequences into memory.
+############################################################
+def fasta_rand_big(num_seq, reads_file, out_file):
+    random.seed()
+
+    # count sequences
+    total_seq = 0
+    for line in open(reads_file):
+        if line[0] == '>':
+            total_seq += 1
+
+    # chose random reads
+    rand_seqs = random.sample(xrange(total_seq), num_seq)
+    rand_seqs.sort()
+
+    # grab reads
+    out = open(out_file, 'w')
+    rand_i = 0
+    seq_i = 0
+    header = ''
+    for line in open(reads_file):
+        if line[0] == '>':
+            if header:
+                # print last
+                if seq_i == rand_seqs[rand_i]:
+                    print >> out, header
+                    print >> out, seq
+                    rand_i += 1
+                    if rand_i >= num_seq:
+                        break
+                seq_i += 1
+
+            header = line.rstrip()
+            seq = ''
+        else:
+            seq += line.rstrip()
+
+    # print last
+    if rand_i < num_seq and seq_i == rand_seqs[rand_i]:
+        print >> out, header
+        print >> out, seq
+
+    out.close()
+
+
+############################################################
 # nt_composition
 #
 # Return a dict of the nt counts in the given sequence,
