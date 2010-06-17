@@ -61,7 +61,7 @@ def main():
         if options.constraints_file:
             constraint_seed(options.reads_file, k, mates, constraints, options.soft_assign)
         (like,priors) = seed_partition(options.reads_file, k, mates, constraints, options.soft_assign, options.par)
-        k = filter_empty(k, priors, constraints)
+        (k,priors) = filter_empty(k, priors, constraints)
         print 'Iter 0:\t%d' % int(like)
 
         if options.seed_only:
@@ -71,7 +71,7 @@ def main():
             score_reads(k, options.reads_file, options.par)
             exit()
     else:
-        priors = [1.0/k]*k            
+        priors = [1.0/k]*k
 
     if options.initial_done or options.seed:
         verify_constraints(k, constraints)
@@ -98,11 +98,11 @@ def main():
 
         # reassign reads to max scoring IMM
         (rsments,like,priors) = reassign_reads(options.reads_file, priors, mates, constraints, options.soft_assign, False)
-        k = filter_empty(k, priors, constraints)
+        (k,priors) = filter_empty(k, priors, constraints)
 
         print 'Iter %d:\t%d\t%d reassignments' % (iter,int(like),rsments)
 
-        good_prog = prog.assess(like)
+        good_prog = prog.assess(like,k)
 
     # take max
     for i in range(k):
@@ -566,9 +566,16 @@ def filter_empty(k, priors, constraints):
         empty = empty[1:]
 
         # rename all following clusters by 1, update priors
-        for i in range(c+1,k):
-            os.system('mv cluster-%d.fa cluster-%d.fa' % (i,i-1))
-            priors[i-1] = priors[i]
+        if c+1 >= k:
+            os.system('rm cluster-%d.fa cluster-%d.icm icm-%d.scores.tmp' % (c,c,c))
+        else:
+            for i in range(c+1,k):
+                os.system('mv cluster-%d.fa cluster-%d.fa' % (i,i-1))
+                os.system('mv cluster-%d.icm cluster-%d.icm' % (i,i-1))
+                os.system('mv icm-%d.scores.tmp icm-%d.scores.tmp' % (i,i-1))
+                if os.path.isfile('cluster-%d.max' % i):
+                    os.system('mv cluster-%d.max cluster-%d.max' % (i,i-1))
+                priors[i-1] = priors[i]
 
         # update constraints
         for r in constraints:
@@ -583,10 +590,11 @@ def filter_empty(k, priors, constraints):
         k -= 1
 
     # re-normalize priors
+    priors = priors[:k]
     sp = sum(priors)
     priors = [p/sp for p in priors]
 
-    return k
+    return (k,priors)
 
 ############################################################
 # load_mates
@@ -628,7 +636,9 @@ class Progress:
         self.like_decr = 0
         self.k = k
 
-    def assess(self,like):
+    def assess(self,like,k):
+        self.k = k
+
         # compare to last likelihood
         if self.last_like and like > self.last_like:
             self.like_decr = 0            

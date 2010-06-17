@@ -70,7 +70,7 @@ def init_clusters(readsf, soft_assign):
     read_likes = {}
     for line in open('sample.fa.binning.allprobs'):
         a = line.split('\t')
-        r = a[0]
+        r = a[0].strip()
         read_likes[r] = [float(x) for x in a[1:]]
         k = len(a[1:])
 
@@ -199,4 +199,4 @@ def ratio_sort(x, y):
 
 if __name__ == '__main__':
     main()
-    #pdb.runcall(main)
+    #pdb.runcall(init_clusters, 'testScimm.fasta', False)

@@ -1,4 +1,4 @@
-#!/fs/sz-user-supported/Linux-i686/bin/python2.5
+#!/usr/bin/env python
 from optparse import OptionParser
 import os, glob, subprocess, math, random
 import scimm, util, dna
@@ -102,11 +102,12 @@ def main():
 def data_integrity(readsf):
     reads = {}
     for line in open(readsf):
-        r = line[1:].split()[0]
-        if reads.has_key(r):
-            print 'Sorry, Phymm only considers fasta headers up to the first whitespace.  Please make these unique in your file'
-            exit()
-        reads[r] = True
+        if line[0] == '>':
+            r = line[1:].split()[0]
+            if reads.has_key(r):
+                print 'Sorry, Phymm only considers fasta headers up to the first whitespace.  Please make these unique in your file.  E.f. %s is not unique' % r
+                exit()
+            reads[r] = True
 
 
 ############################################################
