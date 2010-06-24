@@ -137,7 +137,7 @@ def phymm_parallel(pid, proc, origdir, ignoref):
     cmds = []
     for i in range(proc):
         if ignoref:
-            cmds.append('./scoreReads.pl sample%d.fa.%d %s 2> /dev/null' % (pid,i,ignoref))
+            cmds.append('./scoreReads.pl sample%d.fa.%d -i %s 2> /dev/null' % (pid,i,ignoref))
         else:
             cmds.append('./scoreReads.pl sample%d.fa.%d 2> /dev/null' % (pid,i))
     util.exec_par(cmds, proc)

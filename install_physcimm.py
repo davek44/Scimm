@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, sys
 
 ############################################################
 # install_physcimm.py
@@ -45,7 +45,15 @@ def main():
         os.system('ln -s %s phymm' % prior_phymm_dir)
     else:
         os.chdir('phymm')
-        os.system('./phymmInstall.pl')
+        if os.path.isfile('phymmInstall.pl'):
+            # version 1
+            os.system('./phymmInstall.pl')
+        elif os.path.isfile('phymmSetup.pl'):
+            # version 2
+            os.system('./phymmSetup.pl')
+        else:
+            print sys.stderr, 'Cannot find Phymm installation perl script'
+            exit()
         os.chdir('..')    
 
 ############################################################

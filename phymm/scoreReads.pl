@@ -8,9 +8,6 @@ $| = 1;
 
 my $dataFile = shift;
 
-# DK addition
-my $ignoreFile = shift;
-
 $dataFile =~ s/\(/\\\(/g;
 
 $dataFile =~ s/\)/\\\)/g;
@@ -23,7 +20,24 @@ $outputPrefix =~ s/\./\_/g;
 
 die("Usage: $0 <file containing query reads>\n") if not $dataFile;
 
+############################################################
+# Add options:
+#  -b Don't run Blast
+#  -c Score with only ICM of largest fasta sequence
+#  -i <ignoreFile> Ignore ICMs listed in the file
+#
+# Author: David Kelley
+############################################################
+use Getopt::Std;
+
+my %dk_opts;
+getopts('bci:', \%dk_opts);
+
+###########################################################################################
+# 
 # Set / check BLAST environment variables.
+# 
+###########################################################################################
 
 my $oldBlastDB = $ENV{'BLASTDB'};
 
@@ -31,7 +45,13 @@ my $oldBlastMat = $ENV{'BLASTMAT'};
 
 die("BLAST error: environment variable 'BLASTMAT' not found; please check your local blast binary installation.\n") if not $oldBlastMat;
 
+###########################################################################################
+# 
 # Grab the list of ICMs.
+# 
+###########################################################################################
+
+# ICM list: 1: .genomeData.
 
 opendir DOT, '.genomeData' or die("Can't open . for scanning.\n");
 
@@ -43,13 +63,46 @@ my @ICMs;
 
 foreach my $dir ( @dirs ) {
    
-   if ( -d ".genomeData/$dir" and $dir ne '.' and $dir ne '..' ) {
+   if ( -d ".genomeData/$dir" and $dir !~ /^\./ ) {
       
-      &scanDir(".genomeData/$dir", \@ICMs);
+       if($dk_opts{'c'}) {
+	   &scanDirChrom(".genomeData/$dir", \@ICMs);
+       } else {
+	   &scanDir(".genomeData/$dir", \@ICMs);
+       }
    }
 }
 
+# ICM list: 2: .genomeData/.userAdded, if it exists.
+
+my $userDir = '.genomeData/.userAdded';
+
+if ( -e $userDir ) {
+   
+   opendir DOT, $userDir or die("Can't open $userDir for scanning.\n");
+
+   my @dirs = readdir DOT;
+
+   closedir DOT;
+
+   foreach my $dir ( @dirs ) {
+      
+      if ( -d "$userDir/$dir" and $dir !~ /^\./ ) {
+	 
+	  if($dk_opts{'c'}) {
+	      &scanDirChrom("$userDir/$dir", \@ICMs);
+	  } else {
+	      &scanDir("$userDir/$dir", \@ICMs);
+	  }
+      }
+   }
+}
+
+###########################################################################################
+# 
 # Create a reverse-complement copy of the query file.
+# 
+###########################################################################################
 
 system(".scripts/revCompFASTA.pl $dataFile");
 
@@ -70,8 +123,13 @@ if ( not -e $fileCheck ) {
    die("File renaming problem [revCompFASTA.pl]: could not detect revComp file \"$fileCheck\".\n");
 }
 
-
+###########################################################################################
+# 
 # Read organism names so we can generate results files comparable to what BLAST will output.
+# 
+###########################################################################################
+
+# Accession scan 1: RefSeq orgs.
 
 my $accFile = '.taxonomyData/.0_accessionMap/accessionMap.txt';
 
@@ -90,7 +148,33 @@ while ( my $line = <IN> ) {
 
 close IN;
 
-# Scan for taxonomic metadata.
+# Accession scan 2: user-added orgs, if they exist.
+
+$accFile = '.taxonomyData/.0_accessionMap/accessionMap_userAdded.txt';
+
+if ( -e $accFile ) {
+   
+   open IN, "<$accFile" or die("Can't open $accFile for reading.\n");
+
+   while ( my $line = <IN> ) {
+      
+      chomp $line;
+
+      (my $orgName, my $prefix) = split(/\t/, $line);
+
+      $speciesDirName->{$prefix} = $orgName;
+   }
+
+   close IN;
+}
+
+###########################################################################################
+# 
+# Load full taxonomic metadata for all organisms in the database.
+# 
+###########################################################################################
+
+# Taxonomy scan 1: RefSeq organisms.
 
 my $taxFile = '.taxonomyData/.3_parsedTaxData/distributionOfTaxa.txt';
 
@@ -115,23 +199,50 @@ while ( my $line = <IN> ) {
 
 close IN;
 
+# Taxonomy scan 2: user-added organisms, if they exist.
+
+$taxFile = '.taxonomyData/.3_parsedTaxData/distributionOfTaxa_userAdded.txt';
+
+if ( -e $taxFile ) {
+   
+   open IN, "<$taxFile" or die("Can't open $taxFile for reading.\n");
+
+   while ( my $line = <IN> ) {
+      
+      if ( $line =~ /^\S/ ) {
+	 
+	 chomp $line;
+
+	 (my $taxType, my $taxVal, my $prefixAndSpecies, my $dirName) = split(/\t/, $line);
+
+	 if ( $taxType eq 'phylum' or $taxType eq 'class' or $taxType eq 'order' or $taxType eq 'family' or $taxType eq 'genus' ) {
+	    
+	    $tax->{$dirName}->{$taxType} = $taxVal;
+	 }
+      }
+   }
+}
+
 ############################################################
 # Make a list of ICMs to ignore from $ignoreFile
 #
 # Author: David Kelley
 ############################################################
-open(IGNOREF, $ignoreFile);
-my %ignore_icms = ();
-#print "Ignoring ICMS:\n";
-while(<IGNOREF>) {
-    chomp;
-    $ignore_icms{$_} = 1;
-    #print $_, "\n";
+my %ignore_icms;
+if($dk_opts{'i'}) {
+    open(IGNOREF, dk_opts{'i'});
+    while(<IGNOREF>) {
+	chomp;
+	$ignore_icms{$_} = 1;
+	#print $_, "\n";
+    }
 }
-############################################################
 
-
-# Score the query data (using both forward and reverse directions) with the 1-periodic genome-sequence-trained ICMs.
+###########################################################################################
+# 
+# Score the query data (using both forward and reverse directions) with Phymm.
+# 
+###########################################################################################
 
 print "Scoring reads with Phymm...";
 
@@ -161,6 +272,8 @@ print LOG "Scoring reads with Phymm...\n\n";
 
 foreach my $ICM ( sort { $a cmp $b } @ICMs ) {
 
+    print("$ICM\n");
+
    ########################################
    # Ignore ICM if its in our hash
    #
@@ -168,6 +281,7 @@ foreach my $ICM ( sort { $a cmp $b } @ICMs ) {
    ########################################
    $ICM =~ /genomeData\/(\S+)\//;
    if(exists($ignore_icms{$1})) {
+       print(" skip\n");
        next;
    }
    #print $1, "\n";
@@ -178,11 +292,11 @@ foreach my $ICM ( sort { $a cmp $b } @ICMs ) {
    $icmPrefix =~ s/.+\/([^\/]+)$/$1/;
 
    $icmPrefix =~ s/\.icm$//;
-
+   
    my $fullScore = {};
    
    my $command = '(.scripts/.icmCode/bin/simple-score -N ' . $ICM . ' < ' . $dataFile . ' > tempFwd_' . $outputPrefix . '.txt) >& errFile_' . $outputPrefix . '.txt';
-   #print $command,"\n";
+   
    system($command);
    
    my $inFile = "tempFwd_${outputPrefix}.txt";
@@ -268,7 +382,11 @@ close LOG;
 
 close OUT;
 
-# Write the Phymm-only results.
+###########################################################################################
+# 
+# Write the Phymm output.
+# 
+###########################################################################################
 
 my $phymmOut = 'results.01.phymm_' . $outputPrefix . '.txt';
 
@@ -295,16 +413,21 @@ system("rm errFile_${outputPrefix}.txt");
 
 print "done.\n\n";
 
+###########################################################################################
+# 
+# Score the query data using BLAST.
+# 
+###########################################################################################
 
 ############################################################
 # Skip BLAST
 #
 # Author: David Kelley
 ############################################################
-#exit 0;
+if($dk_opts{'b'}) {
+    exit 0;
+}
 ############################################################
-
-# Score the query data using BLAST.
 
 print "Scoring reads with BLAST...";
 
@@ -314,7 +437,7 @@ $newBlastDB .= '/.blastData/';
 
 $ENV{'BLASTDB'} = $newBlastDB;
 
-my $blastCmd = "blastall -i $dataFile -o rawBlastOutput_${outputPrefix}.txt -d bacteriaAndArchaea -p blastn -a 2 -m 9";
+my $blastCmd = "blastall -i $dataFile -o rawBlastOutput_${outputPrefix}.txt -d phymm_BLAST_DB -p blastn -a 2 -m 9";
 
 system($blastCmd);
 
@@ -323,7 +446,11 @@ if ( -e "error.log" ) {
    system("rm error.log");
 }
 
+###########################################################################################
+# 
 # Parse the raw BLAST results file to generate a best-hit list.
+# 
+###########################################################################################
 
 my $blastFile = 'rawBlastOutput_' . $outputPrefix . '.txt';
 
@@ -381,7 +508,11 @@ close OUT;
 
 print "done.\n\n";
 
-# Combine the scores to generate PhymmBL predictions.
+###########################################################################################
+# 
+# Combine Phymm and BLAST scores to generate PhymmBL predictions.
+# 
+###########################################################################################
 
 print "Combining scores...";
 
@@ -496,7 +627,7 @@ foreach my $queryID ( keys %$phymmScore ) {
 	 
 	 if ( $blastScore->{$queryID}->{$matchName} == 0 ) {
 	    
-	    $tempScore += 1000;
+	    $tempScore += 1.2 * (4 - log(1e-180));
 	    
 	 } else {
 	    
@@ -519,7 +650,11 @@ foreach my $queryID ( keys %$phymmScore ) {
 
 } # end foreach ( query key in the $phymmScore hash )
 
-# Output the combined results.
+###########################################################################################
+# 
+# Output the combined (i.e., PhymmBL) results.
+# 
+###########################################################################################
 
 my $combinedOut = 'results.03.combined_' . $outputPrefix . '.txt';
 
@@ -540,13 +675,14 @@ close OUT;
 
 print "done.\n\n";
 
+###########################################################################################
+# 
+# SUBROUTINES
+# 
+###########################################################################################
 
-############################################################
-# No plasmids!  Only train on largest fasta file in each
-# strain directory
-#
-# Author: David Kelley
-############################################################
+# Scan a directory for all the .icm files in it, and save the local path for each into the array we received as an argument.
+
 sub scanDir {
    
    my $dir = shift;
@@ -559,14 +695,33 @@ sub scanDir {
 
    closedir DOT;
 
-   # original
-   #foreach my $file ( @files ) {      
-   #   if ( $file =~ /\.icm$/ ) {
-   #	 push @$arrayRef, "$dir/$file";
-   #   }
-   #}
+   foreach my $file ( @files ) {
+      
+      if ( $file =~ /\.icm$/ ) {
+	 
+	 push @$arrayRef, "$dir/$file";
+      }
+   }
+}
 
-   # DK
+############################################################
+# No plasmids!  Only train on largest fasta file in each
+# strain directory
+#
+# Author: David Kelley
+############################################################
+sub scanDirChrom {
+   
+   my $dir = shift;
+
+   my $arrayRef = shift;
+   
+   opendir DOT, $dir or die("Can't open $dir for scanning.\n");
+
+   my @files = readdir DOT;
+
+   closedir DOT;
+
    my $filesize;
    my $maxsize = 0;
    my $maxfna;
