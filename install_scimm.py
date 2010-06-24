@@ -46,7 +46,7 @@ def main():
         os.chdir('..')
 
     # Scimm
-    os.system('sed -i \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
+    os.system('sed -i .bak \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
     os.system('rm bin/scimm.py.bak')
     
 
