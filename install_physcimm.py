@@ -44,10 +44,12 @@ def main():
     if prior_phymm_dir:
         os.system('ln -s %s phymm' % prior_phymm_dir)
     else:
+        os.mkdir('phymm')
         os.chdir('phymm')
         os.system('curl -o phymmInstaller.tar.gz http://www.cbcb.umd.edu/software/phymm/phymmInstaller.tar.gz')
         os.system('tar -xzvf phymmInstaller.tar.gz')
         os.system('./phymmSetup.pl')
+        os.chdir('..')
 
 
 ############################################################
