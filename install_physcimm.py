@@ -35,26 +35,20 @@ def main():
         os.chdir('..')
     
     # Scimm
-    os.system('sed -i \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
+    os.system('sed -i .bak \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
     os.system('rm bin/scimm.py.bak')
 
     # Phymm
-    os.system('sed -i \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py' % installdir) 
+    os.system('sed -i .bak \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py' % installdir) 
     os.system('rm bin/physcimm.py.bak')
     if prior_phymm_dir:
         os.system('ln -s %s phymm' % prior_phymm_dir)
     else:
         os.chdir('phymm')
-        if os.path.isfile('phymmInstall.pl'):
-            # version 1
-            os.system('./phymmInstall.pl')
-        elif os.path.isfile('phymmSetup.pl'):
-            # version 2
-            os.system('./phymmSetup.pl')
-        else:
-            print sys.stderr, 'Cannot find Phymm installation perl script'
-            exit()
-        os.chdir('..')    
+        os.system('curl -o phymmInstaller.tar.gz http://www.cbcb.umd.edu/software/phymm/phymmInstaller.tar.gz')
+        os.system('tar -xzvf phymmInstaller.tar.gz')
+        os.system('./phymmSetup.pl')
+
 
 ############################################################
 # __main__
