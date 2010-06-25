@@ -35,12 +35,12 @@ def main():
         os.chdir('..')
     
     # Scimm
-    os.system('sed -i .bak \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py' % installdir) 
-    os.system('rm bin/scimm.py.bak')
+    os.system('sed \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir) 
+    os.system('mv sc.tmp bin/scimm.py')
 
     # Phymm
-    os.system('sed -i .bak \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py' % installdir) 
-    os.system('rm bin/physcimm.py.bak')
+    os.system('sed \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py ph.tmp' % installdir) 
+    os.system('mv ph.tmp bin/physcimm.py')
     if prior_phymm_dir:
         os.system('ln -s %s phymm' % prior_phymm_dir)
     else:
