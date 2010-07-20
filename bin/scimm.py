@@ -27,20 +27,20 @@ def main():
     # generic options
     parser.add_option('-s','-r', dest='readsf', help='Fasta file of sequences')
     parser.add_option('-k', dest='k', type='int', help='Number of clusters')
-    parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run')
-    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters')
+    parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run [Default=%default]')
+    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters [Default=%default]')
 
     # likelybin options
-    parser.add_option('--ls', dest='lb_starts', type='int', default=1, help='Number of random LikelyBin starts')
-    parser.add_option('--ln', dest='lb_numreads', type='int', default=3000, help='Number of reads to sample for LikelyBin')
-    parser.add_option('--lt', dest='lb_threads', type='int', default=2, help='Number of LikelyBin threads per start, and CPUs for imm_cluster')
-    parser.add_option('--lo', dest='lb_order', type='int', default=3, help='Order of LikelyBin Markov model')
+    parser.add_option('--ls', dest='lb_starts', type='int', default=1, help='Number of random LikelyBin starts [Default=%default]')
+    parser.add_option('--ln', dest='lb_numreads', type='int', default=3000, help='Number of reads to sample for LikelyBin [Default=%default]')
+    parser.add_option('--lt', dest='lb_threads', type='int', default=2, help='Number of LikelyBin threads per start, and CPUs for imm_cluster [Default=%default]')
+    parser.add_option('--lo', dest='lb_order', type='int', default=3, help='Order of LikelyBin Markov model [Default=%default]')
 
     # compostbin options
-    parser.add_option('--cs', dest='cb_starts', type='int', default=1, help='Number of random CompostBin starts')
-    parser.add_option('--cn', dest='cb_numreads', type='int', default=3000, help='Number of reads to sample for CompostBin')
-    parser.add_option('--ct', dest='cb_threads', type='int', default=1, help='Number of CPUs for imm_cluster')
-    parser.add_option('--co','--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin')
+    parser.add_option('--cs', dest='cb_starts', type='int', default=1, help='Number of random CompostBin starts [Default=%default]')
+    parser.add_option('--cn', dest='cb_numreads', type='int', default=3000, help='Number of reads to sample for CompostBin [Default=%default]')
+    parser.add_option('--ct', dest='cb_threads', type='int', default=1, help='Number of CPUs for imm_cluster [Default=%default]')
+    parser.add_option('--co','--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin [Default=%default]')
 
     (options, args) = parser.parse_args()
 
@@ -79,7 +79,7 @@ def main():
                 # double check processes
                 if j + options.cb_threads <= options.proc:
                     # make a temp dir to compute in and cd to it
-                    temp_dir('tmp.start%d' % i)                    
+                    temp_dir('tmp.start%d' % i)
                     p.append(subprocess.Popen('%s/cb_init.py -r %s -n %d -k %d -m %d -p %d %s' % (scimm_bin, options.readsf, options.cb_numreads, options.k, options.cb_mers, options.cb_threads, em), shell=True))
                     os.chdir('..')
                     i += 1
