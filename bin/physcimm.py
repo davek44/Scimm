@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 import os, glob, subprocess, math, random
 import scimm, util, dna
 
@@ -23,15 +23,23 @@ def main():
     # generic options
     parser.add_option('-s','-r', dest='readsf', help='Fasta file of sequences')
     parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run')
-    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters [Default=%default]')
 
     # phymm options
     parser.add_option('--taxlevel', dest='taxlevel', default='family', help='Taxonomic level at which to cluster reads with Phymm [Default=%default]')
     parser.add_option('--minbp_pct', dest='minbp_pct', type='float', default=.01, help='Minimum proportion of bp assigned to a class to become a cluster [Default=%default]')
     parser.add_option('-n','--numreads', dest='numreads', type='int', default=3000, help='Number of reads to sample from the data set to classify with Phymm [Default=%default]')
-    parser.add_option('-i', dest='ignore', help='Ask Phymm to ignore the IMMs in the given file')
-    parser.add_option('--init', dest='init', action='store_true', default=False, help='Just initialize the clusters with Phymm; do not run cluster with IMMs [Default=%default]')
-    #parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
+    parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
+
+    # my testing options
+    # help='Use a soft assignment of reads to clusters [Default=%default]'
+    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help=SUPPRESS_HELP)
+    # help='Ask Phymm to ignore the IMMs in the given file'
+    parser.add_option('-i', dest='ignore', help=SUPPRESS_HELP)
+    # help='Run Phymm and initialize clusters only'
+    parser.add_option('--init', dest='init', action='store_true', default=False, help=SUPPRESS_HELP)
+    # help='Run my version of Phymm w/o Blast and w/ chromosomes only'
+    parser.add_option('--bc', dest='bc', action='store_true', default=False, help=SUPPRESS_HELP)
+    
 
     (options, args) = parser.parse_args()
 
@@ -71,7 +79,7 @@ def main():
         options.numreads = total_reads
 
     # classify
-    phymm_parallel(pid, options.proc, origdir, options.ignore)
+    phymm_parallel(pid, options.proc, origdir, options.ignore, options.bc)
 
     # determine minimum bp for cluster
     total_bp = 0
@@ -116,7 +124,7 @@ def data_integrity(readsf):
 # Break up file of reads and run Phymm in parallel. Output
 # is placed in results.txt
 ############################################################
-def phymm_parallel(pid, proc, origdir, ignoref):
+def phymm_parallel(pid, proc, origdir, ignoref, bc):
     # open tmp files
     tmpfiles = []
     for i in range(proc):
@@ -133,13 +141,18 @@ def phymm_parallel(pid, proc, origdir, ignoref):
     for i in range(proc):
         tmpfiles[i].close()
 
+    if bc:
+        bc_str = '-b -c'
+    else:
+        bc_str = ''
+
     # launch Phymm
     cmds = []
     for i in range(proc):
         if ignoref:
-            cmds.append('./scoreReads.pl sample%d.fa.%d -i %s 2> /dev/null' % (pid,i,ignoref))
+            cmds.append('./scoreReads.pl sample%d.fa.%d -i %s %s 2> /dev/null' % (pid,i,ignoref,bc_str))
         else:
-            cmds.append('./scoreReads.pl sample%d.fa.%d 2> /dev/null' % (pid,i))
+            cmds.append('./scoreReads.pl sample%d.fa.%d %s 2> /dev/null' % (pid,i,bc_str))
     util.exec_par(cmds, proc)
 
     # collect output

@@ -83,7 +83,7 @@ def main():
             # matlab partition
             matlab_success = False
             while not matlab_success:
-                p = subprocess.Popen('matlab -nodisplay -nosplash -nodesktop -r partition', shell=True)
+                p = subprocess.Popen('matlab -nodisplay -nosplash -nodesktop -wait -r partition', shell=True)
                 sts = os.waitpid(p.pid, 0)[1]
 
                 if os.path.isfile('partition.txt'):

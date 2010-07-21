@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 import os, glob, subprocess, math
 import imm_cluster, util
 
@@ -28,7 +27,8 @@ def main():
     parser.add_option('-s','-r', dest='readsf', help='Fasta file of sequences')
     parser.add_option('-k', dest='k', type='int', help='Number of clusters')
     parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run [Default=%default]')
-    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help='Use a soft assignment of reads to clusters [Default=%default]')
+    # help='Use a soft assignment of reads to clusters [Default=%default]'
+    parser.add_option('--em',dest='soft_assign', action='store_true', default=False, help=SUPPRESS_HELP)
 
     # likelybin options
     parser.add_option('--ls', dest='lb_starts', type='int', default=1, help='Number of random LikelyBin starts [Default=%default]')
@@ -54,11 +54,11 @@ def main():
         em = ''
 
     # run initial samples
-    i = 0    
+    i = 0
     while i < total_starts:
         p = []
         j = 0
-        while j < options.proc:
+        while j < options.proc and i < total_starts:
             # LikelyBin
             if i < options.lb_starts:
                 # double check processes
