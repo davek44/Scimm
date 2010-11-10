@@ -81,13 +81,18 @@ def main():
                 os.rename('constraints.dat', 'constraints.tmp')                
 
             # matlab partition
-            matlab_success = False
-            while not matlab_success:
+            matlab_attempts = 0
+            while matlab_attempts != -1 and matlab_attempts < 3:
                 p = subprocess.Popen('matlab -nodisplay -nosplash -nodesktop -wait -r partition', shell=True)
                 sts = os.waitpid(p.pid, 0)[1]
 
                 if os.path.isfile('partition.txt'):
-                    matlab_success = True
+                    matlab_attempts = -1
+                else:
+                    print >> sys.stderr, 'Matlab failed, trying again.'
+                    matlab_attempts += 1
+            if matlab_attempts != -1:
+                exit(1)
 
             # compare ncut value
             ncut = float(open('ncut.txt').readline().rstrip())
