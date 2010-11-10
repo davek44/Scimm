@@ -12,6 +12,8 @@ import imm_cluster, util
 ############################################################
 
 scimm_bin = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/bin"
+
+
 if 'PYTHONPATH' in os.environ:
     os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + scimm_bin
 else:
@@ -40,7 +42,7 @@ def main():
     parser.add_option('--cs', dest='cb_starts', type='int', default=1, help='Number of random CompostBin starts [Default=%default]')
     parser.add_option('--cn', dest='cb_numreads', type='int', default=3000, help='Number of reads to sample for CompostBin [Default=%default]')
     parser.add_option('--ct', dest='cb_threads', type='int', default=1, help='Number of CPUs for imm_cluster [Default=%default]')
-    parser.add_option('--co','--cm', dest='cb_mers', type='int', default=4, help='mers to count in CompostBin [Default=%default]')
+    parser.add_option('--co','--cm', dest='cb_mers', type='int', default=5, help='mers to count in CompostBin [Default=%default]')
 
     (options, args) = parser.parse_args()
 

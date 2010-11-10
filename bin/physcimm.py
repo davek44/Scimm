@@ -28,7 +28,7 @@ def main():
     parser.add_option('--taxlevel', dest='taxlevel', default='family', help='Taxonomic level at which to cluster reads with Phymm [Default=%default]')
     parser.add_option('--minbp_pct', dest='minbp_pct', type='float', default=.01, help='Minimum proportion of bp assigned to a class to become a cluster [Default=%default]')
     parser.add_option('-n','--numreads', dest='numreads', type='int', default=3000, help='Number of reads to sample from the data set to classify with Phymm [Default=%default]')
-    parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
+    #parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
 
     # my testing options
     # help='Use a soft assignment of reads to clusters [Default=%default]'
@@ -38,8 +38,7 @@ def main():
     # help='Run Phymm and initialize clusters only'
     parser.add_option('--init', dest='init', action='store_true', default=False, help=SUPPRESS_HELP)
     # help='Run my version of Phymm w/o Blast and w/ chromosomes only'
-    parser.add_option('--bc', dest='bc', action='store_true', default=False, help=SUPPRESS_HELP)
-    
+    parser.add_option('--bc', dest='bc', action='store_true', default=False, help=SUPPRESS_HELP)    
 
     (options, args) = parser.parse_args()
 
@@ -113,7 +112,7 @@ def data_integrity(readsf):
         if line[0] == '>':
             r = line[1:].split()[0]
             if reads.has_key(r):
-                print 'Sorry, Phymm only considers fasta headers up to the first whitespace.  Please make these unique in your file.  E.f. %s is not unique' % r
+                print 'Sorry, Phymm only considers fasta headers up to the first whitespace.  Please make these unique in your file.  E.g. %s is not unique' % r
                 exit()
             reads[r] = True
 
