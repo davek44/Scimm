@@ -21,14 +21,14 @@ def main():
     parser = OptionParser()
 
     # generic options
-    parser.add_option('-s','-r', dest='readsf', help='Fasta file of sequences')
+    parser.add_option('-s', dest='readsf', help='Fasta file of sequences')
     parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run')
 
     # phymm options
     parser.add_option('--taxlevel', dest='taxlevel', default='family', help='Taxonomic level at which to cluster reads with Phymm [Default=%default]')
     parser.add_option('--minbp_pct', dest='minbp_pct', type='float', default=.01, help='Minimum proportion of bp assigned to a class to become a cluster [Default=%default]')
     parser.add_option('-n','--numreads', dest='numreads', type='int', default=3000, help='Number of reads to sample from the data set to classify with Phymm [Default=%default]')
-    #parser.add_option('--nophymm', dest='nophymm', action='store_true', default=False, help='Phymm results have already been computed, and are in results.txt')
+    parser.add_option('-r','--phymm_results', dest='phymm_results_file', help='Phymm results file to be used rather than running Phymm from scratch.')
 
     # my testing options
     # help='Use a soft assignment of reads to clusters [Default=%default]'
@@ -38,7 +38,7 @@ def main():
     # help='Run Phymm and initialize clusters only'
     parser.add_option('--init', dest='init', action='store_true', default=False, help=SUPPRESS_HELP)
     # help='Run my version of Phymm w/o Blast and w/ chromosomes only'
-    parser.add_option('--bc', dest='bc', action='store_true', default=False, help=SUPPRESS_HELP)    
+    parser.add_option('--bc', dest='bc', action='store_true', default=False, help=SUPPRESS_HELP)
 
     (options, args) = parser.parse_args()
 
@@ -55,50 +55,46 @@ def main():
     else:
         em = ''
 
-    # move to phymm directory
-    origdir = os.getcwd()
-    os.chdir(phymmdir)
+    if options.phymm_results_file:
+        os.symlink(options.readsf, 'sample.fa')
+        phymm_results_file = options.phymm_results_file
 
-    # choose a random id for the phymm dir
-    pid_unchosen = True
-    while pid_unchosen:
-        pid = random.randint(0,1000000)
-        if not os.path.isfile('sample%d.fa'%pid):
-            pid_unchosen = False
-
-    # randomly sample reads
-    total_reads = 0
-    for line in open(options.readsf):
-        if line[0] == '>':
-            total_reads += 1
-    if options.numreads and options.numreads < total_reads:
-        dna.fasta_rand_big(options.numreads, options.readsf, 'sample%d.fa' % pid)
     else:
-        os.system('ln -s %s sample%d.fa' % (options.readsf,pid))
-        options.numreads = total_reads
+        # randomly sample reads
+        total_reads = 0
+        for line in open(options.readsf):
+            if line[0] == '>':
+                total_reads += 1
+        if options.numreads and options.numreads < total_reads:
+            dna.fasta_rand_big(options.numreads, options.readsf, 'sample.fa')
+        else:
+            os.symlink(options.readsf, 'sample.fa')
 
-    # classify
-    phymm_parallel(pid, options.proc, origdir, options.ignore, options.bc)
+        # classify
+        if options.bc:
+            bc_str = '-b -c'
+            phymm_results_file = 'results.01.phymm_sample_fa.txt'
+        else:
+            bc_str = ''
+            phymm_results_file = 'results.03.phymmBL_sample_fa.txt'
+        p = subprocess.Popen('phymm_par.py -p %d %s --phymm %s sample.fa' % (options.proc,bc_str,phymmdir), shell=True)
+        os.waitpid(p.pid, 0)
 
     # determine minimum bp for cluster
     total_bp = 0
-    for line in open('sample%d.fa'%pid):
+    for line in open('sample.fa'):
         if line[0] != '>':
             total_bp += len(line.rstrip())
     minbp = options.minbp_pct*total_bp
 
-    # clean up phymm
-    os.system('rm *sample%d*' % pid)
-
-    # move back to regular directory
-    os.chdir(origdir)    
-
     # initialize clusters
-    class_k = init_clusters(options.readsf, options.taxlevel, minbp, options.soft_assign)    
+    class_k = init_clusters(options.readsf, phymm_results_file, options.taxlevel, minbp, options.soft_assign)
 
     # run IMM clustering
     if not options.init:
-        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> immc.log' % (scimm.scimm_bin,class_k, options.readsf, options.proc, em))
+        p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> immc.log' % (scimm.scimm_bin,class_k, options.readsf, options.proc, em), shell=True)
+        os.waitpid(p.pid, 0)
+        
 
 
 ############################################################
@@ -118,55 +114,12 @@ def data_integrity(readsf):
 
 
 ############################################################
-# phymm_parallel
-#
-# Break up file of reads and run Phymm in parallel. Output
-# is placed in results.txt
-############################################################
-def phymm_parallel(pid, proc, origdir, ignoref, bc):
-    # open tmp files
-    tmpfiles = []
-    for i in range(proc):
-        tmpfiles.append(open('sample%d.fa.%d' % (pid,i), 'w'))
-
-    # distribute sequences among temp files
-    seq_count = -1
-    for line in open('sample%d.fa' % pid):
-        if line[0] == '>':
-            seq_count += 1
-        tmpfiles[seq_count % proc].write(line)
-
-    # close temp files
-    for i in range(proc):
-        tmpfiles[i].close()
-
-    if bc:
-        bc_str = '-b -c'
-    else:
-        bc_str = ''
-
-    # launch Phymm
-    cmds = []
-    for i in range(proc):
-        if ignoref:
-            cmds.append('./scoreReads.pl sample%d.fa.%d -i %s %s 2> /dev/null' % (pid,i,ignoref,bc_str))
-        else:
-            cmds.append('./scoreReads.pl sample%d.fa.%d %s 2> /dev/null' % (pid,i,bc_str))
-    util.exec_par(cmds, proc)
-
-    # collect output
-    open('%s/results.txt' % origdir,'w')
-    for i in range(proc):
-        os.system('cat results.01.phymm_sample%d_fa_%d.txt >> %s/results.txt' % (pid,i,origdir))
-
-
-############################################################
 # init_clusters.py
 #
 # Convert Phymm output to an initial partitioning of
 # reads for imm_cluster
 ############################################################
-def init_clusters(readsf, taxlevel, minbp, soft_assign):
+def init_clusters(readsf, phymm_results_file, taxlevel, minbp, soft_assign):
     class2index = {'species':1, 'genus':3, 'family':4, 'order':5, 'class':6, 'phylum':7}
     col = class2index[taxlevel.lower()]
 
@@ -184,7 +137,7 @@ def init_clusters(readsf, taxlevel, minbp, soft_assign):
     # fill clusters with reads
     clusters = {}
     clustbp = {}
-    for line in open('results.txt'):
+    for line in open(phymm_results_file):
         a = line.split('\t')
         a[-1] = a[-1].rstrip()
 
