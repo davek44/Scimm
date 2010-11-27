@@ -56,7 +56,9 @@ def main():
         em = ''
 
     if options.phymm_results_file:
-        os.symlink(options.readsf, 'sample.fa')
+        if not os.path.isfile('sample.fa') and not os.path.islink('sample.fa'):
+            print >> sys.stderr, 'Assuming Phymm results file includes all reads'
+            os.symlink(options.readsf, 'sample.fa')
         phymm_results_file = options.phymm_results_file
 
     else:
@@ -120,7 +122,10 @@ def data_integrity(readsf):
 # reads for imm_cluster
 ############################################################
 def init_clusters(readsf, phymm_results_file, taxlevel, minbp, soft_assign):
-    class2index = {'species':1, 'genus':3, 'family':4, 'order':5, 'class':6, 'phylum':7}
+    if open(phymm_results_file).readline().find('CONF') == -1:
+        class2index = {'strain':1, 'species':1, 'genus':3, 'family':4, 'order':5, 'class':6, 'phylum':7}
+    else:
+        class2index = {'strain':1, 'species':1, 'genus':3, 'family':5, 'order':7, 'class':9, 'phylum':11}
     col = class2index[taxlevel.lower()]
 
     # get read sizes and map between Phymm headers and true headers
