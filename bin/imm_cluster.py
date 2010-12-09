@@ -2,7 +2,7 @@
 
 from __future__ import division
 from optparse import OptionParser
-import sys, os, glob, random, math, util, pdb
+import sys, os, glob, random, math, util, pdb, sys
 import scimm
 
 ############################################################
@@ -101,6 +101,7 @@ def main():
         (k,priors) = filter_empty(k, priors, constraints)
 
         print 'Iter %d:\t%d\t%d reassignments' % (iter,int(like),rsments)
+        sys.stdout.flush()
 
         good_prog = prog.assess(like,k)
 

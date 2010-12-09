@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from optparse import OptionParser, SUPPRESS_HELP
-import os, glob, subprocess, math, random
+import os, glob, subprocess, math, random, sys
 import scimm, util, dna
 
 ############################################################
