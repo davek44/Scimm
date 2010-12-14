@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, subprocess
+import os, subprocess, stat
 
 ############################################################
 # install_scimm.py
@@ -37,6 +37,8 @@ def main():
     p = subprocess.Popen('sed \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py > cb.tmp' % installdir, shell=True)
     os.waitpid(p.pid,0)
     os.rename('cb.tmp', 'CBCBCompostBin/compostbin.py')
+    os.chmod('CBCBCompostBin/compostbin.py',stat.S_IXUSR)
+    os.chmod('CBCBCompostBin/compostbin.py',stat.S_IXGRP)
     if not os.path.isfile('bin/compostbin.py'):
         os.symlink('../CBCBCompostBin/compostbin.py', 'bin/compostbin.py')
 
@@ -44,6 +46,8 @@ def main():
     p = subprocess.Popen('sed \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir, shell=True)
     os.waitpid(p.pid,0)
     os.rename('sc.tmp', 'bin/scimm.py')
+    os.chmod('bin/scimm.py', stat.S_IXUSR)
+    os.chmod('bin/scimm.py', stat.S_IXGRP)
     
 
 ############################################################
