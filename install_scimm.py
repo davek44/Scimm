@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, subprocess
 
 ############################################################
 # install_scimm.py
@@ -17,37 +17,33 @@ def main():
 
     # IMM code
     os.chdir('glimmer3.02/src')
-    os.system('make clean; make')
+    p = subprocess.Popen('make clean; make', shell=True)
+    os.waitpid(p.pid,0)
     os.chdir('../..')
     if not os.path.isfile('bin/simple-score'):
-        os.chdir('bin')
-        os.system('ln -s ../glimmer3.02/bin/simple-score')
-        os.chdir('..')
+        os.symlink('../glimmer3.02/bin/simple-score','bin/simple-score')
     if not os.path.isfile('bin/build-icm'):
-        os.chdir('bin')
-        os.system('ln -s ../glimmer3.02/bin/build-icm')
-        os.chdir('..')
+        os.symlink('../glimmer3.02/bin/build-icm', 'bin/build-icm')
 
     # LikelyBin
     os.chdir('likelybin-0.1')
-    os.system('make clean; make')
+    p = subprocess.Popen('make clean; make', shell=True)
+    os.waitpid(p.pid,0)
     os.chdir('..')
     if not os.path.isfile('bin/mcmc.pl'):
-        os.chdir('bin')
-        os.system('ln -s ../likelybin-0.1/mcmc.pl')
-        os.chdir('..')
+        os.symlink('ln -s ../likelybin-0.1/mcmc.pl','bin/mcmc.pl')
 
     # CBCBCompostBin
-    os.system('sed \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py > cb.tmp' % installdir)
-    os.system('mv cb.tmp CBCBCompostBin/compostbin.py')
+    p = subprocess.Popen('sed \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py > cb.tmp' % installdir, shell=True)
+    os.waitpid(p.pid,0)
+    os.rename('cb.tmp', 'CBCBCompostBin/compostbin.py')
     if not os.path.isfile('bin/compostbin.py'):
-        os.chdir('bin')
-        os.system('ln -s ../CBCBCompostBin/compostbin.py')
-        os.chdir('..')
+        os.symlink('../CBCBCompostBin/compostbin.py', 'bin/compostbin.py')
 
     # Scimm
-    os.system('sed \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir) 
-    os.system('rm sc.tmp bin/scimm.py')
+    p = subprocess.Popen('sed \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir, shell=True)
+    os.waitpid(p.pid,0)
+    os.rename('sc.tmp', 'bin/scimm.py')
     
 
 ############################################################
