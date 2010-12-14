@@ -31,7 +31,7 @@ def main():
     os.waitpid(p.pid,0)
     os.chdir('..')
     if not os.path.isfile('bin/mcmc.pl'):
-        os.symlink('ln -s ../likelybin-0.1/mcmc.pl','bin/mcmc.pl')
+        os.symlink('../likelybin-0.1/mcmc.pl','bin/mcmc.pl')
 
     # CBCBCompostBin
     p = subprocess.Popen('sed \'s,cb_bin = "[a-zA-Z/]*",cb_bin = "%s/CBCBCompostBin",\' CBCBCompostBin/compostbin.py > cb.tmp' % installdir, shell=True)
