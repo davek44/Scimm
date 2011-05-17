@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 import os, glob, subprocess
-import scimm, dna
+import dna
 
 ############################################################
 # cb_init.py
@@ -11,6 +11,12 @@ import scimm, dna
 # initial run of imm_cluster
 ############################################################
 
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+
+############################################################
+# main
+############################################################
 def main():
     parser = OptionParser()
 
@@ -36,16 +42,20 @@ def main():
     if options.numreads and options.numreads < total_reads:
         dna.fasta_rand_big(options.numreads, options.readsf, 'sample.fa')
     else:
-        os.system('ln -s %s sample.fa' % options.readsf)
+        if os.path.isfile('sample.fa') or os.path.islink('sample.fa'):
+            os.remvoe('sample.fa')
+        os.symlink(options.readsf, 'sample.fa')
 
     # CompostBin
-    os.system('%s/compostbin.py -r sample.fa -c %d -k %d &> cb.log' % (scimm.scimm_bin, options.clusters, options.mers))
+    p = subprocess.Popen('%s/compostbin.py -r sample.fa -c %d -k %d &> cb.log' % (bin_dir, options.clusters, options.mers), shell=True)
+    os.waitpid(p.pid, 0)
 
     # initialize clusters
     init_clusters(options.readsf, options.clusters, options.soft_assign)
 
     # run seed_only
-    os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s >> cb.log' % (scimm.scimm_bin, options.clusters, options.readsf, options.proc, em))
+    p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s >> cb.log' % (bin_dir, options.clusters, options.readsf, options.proc, em), shell=True)
+    os.waitpid(p.pid, 0)
     
 
 ############################################################

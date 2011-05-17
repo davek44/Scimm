@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from optparse import OptionParser, SUPPRESS_HELP
-import os, glob, subprocess, math
+import os, glob, subprocess, math, shutil
 import imm_cluster, util
 
 ############################################################
@@ -12,12 +12,12 @@ import imm_cluster, util
 ############################################################
 
 scimm_bin = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/bin"
-
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 if 'PYTHONPATH' in os.environ:
-    os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + scimm_bin
+    os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + bin_dir
 else:
-    os.environ['PYTHONPATH'] = scimm_bin
+    os.environ['PYTHONPATH'] = bin_dir
 
 ############################################################
 # main
@@ -67,7 +67,7 @@ def main():
                 if j + options.lb_threads <= options.proc:
                     # make a temp dir to compute in and cd to it
                     temp_dir('tmp.start%d' % i)                    
-                    p.append(subprocess.Popen('%s/lb_init.py -r %s -n %d -k %d -o %d -p %d %s' % (scimm_bin, options.readsf, options.lb_numreads, options.k, options.lb_order, options.lb_threads, em), shell=True))
+                    p.append(subprocess.Popen('%s/lb_init.py -r %s -n %d -k %d -o %d -p %d %s' % (bin_dir, options.readsf, options.lb_numreads, options.k, options.lb_order, options.lb_threads, em), shell=True))
                     os.chdir('..')
                     i += 1
                 elif j == 0:
@@ -82,7 +82,7 @@ def main():
                 if j + options.cb_threads <= options.proc:
                     # make a temp dir to compute in and cd to it
                     temp_dir('tmp.start%d' % i)
-                    p.append(subprocess.Popen('%s/cb_init.py -r %s -n %d -k %d -m %d -p %d %s' % (scimm_bin, options.readsf, options.cb_numreads, options.k, options.cb_mers, options.cb_threads, em), shell=True))
+                    p.append(subprocess.Popen('%s/cb_init.py -r %s -n %d -k %d -m %d -p %d %s' % (bin_dir, options.readsf, options.cb_numreads, options.k, options.cb_mers, options.cb_threads, em), shell=True))
                     os.chdir('..')
                     i += 1
                 elif j == 0:
@@ -99,15 +99,12 @@ def main():
     #maxlike_clusters(total_starts, options.readsf, options.k, options.soft_assign)    
     minentropy_clusters(total_starts, options.readsf, options.k, options.soft_assign)    
 
-    # delete others
-    #for i in range(options.starts):
-    #    os.system('rm -r tmp.start%d' % i)
-
     # in case k changed
     new_k = determine_k(options.soft_assign, options.k)
 
     # run imm clustering completely
-    os.system('%s/imm_cluster.py -k %d -r %s -p %d -i --trained %s &> immc.log' % (scimm_bin, new_k, options.readsf, options.proc, em))
+    p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -i --trained %s &> immc.log' % (bin_dir, new_k, options.readsf, options.proc, em), shell=True)
+    os.waitpid(p.pid, 0)
 
 
 ############################################################
@@ -119,8 +116,8 @@ def main():
 def temp_dir(tmpdir):
     if os.path.isdir(tmpdir):
         os.chdir(tmpdir)
-        if len(glob.glob('*')) > 0:
-            os.system('rm *')
+        for f in glob.glob('*'):
+            os.remove(f)
     else:
         os.mkdir(tmpdir)
         os.chdir(tmpdir)
@@ -152,7 +149,9 @@ def maxlike_clusters(total_starts, readsf, k, soft_assign):
             max_clust = i
 
     # get files from max
-    os.system('cp tmp.start%d/cluster-*.fa tmp.start%d/icm-*scores.tmp .' % (max_clust,max_clust))
+    for c in range(len(glob.glob('cluster-*.fa'))):
+        shutil.copy('tmp.start%d/cluster-%d.fa' % (max_clust,c), 'cluster-%d.fa' % c)
+        shutil.copy('tmp.start%d/icm-%dscores.tmp' % (max_clust,c), 'icm-%dscores.tmp' % c)
 
 
 ############################################################
@@ -189,7 +188,9 @@ def minentropy_clusters(total_starts, readsf, k, soft_assign):
     (min_entropy, min_clust) = util.min_i(entropy)
 
     # get files from min
-    os.system('cp tmp.start%d/cluster-*.fa tmp.start%d/icm-*scores.tmp .' % (min_clust,min_clust))
+    for c in range(len(glob.glob('cluster-*.fa'))):
+        shutil.copy('tmp.start%d/cluster-%d.fa' % (min_clust,c), 'cluster-%d.fa' % c)
+        shutil.copy('tmp.start%d/icm-%dscores.tmp' % (min_clust,c), 'icm-%dscores.tmp' % c)
 
 
 ############################################################

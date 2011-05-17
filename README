@@ -5,7 +5,7 @@ supervised method that uses Phymm to initialize Scimm.
 
 Reference:
 Kelley, DR and Salzberg, SL.  Clustering metagenomic sequences with
-interpolated Markov models.  (under review)
+interpolated Markov models.  BMC Bioinformatics 11:154 2010.
 
 Website (w/ manual):
 http://www.cbcb.umd.edu/software/scimm

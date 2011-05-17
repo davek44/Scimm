@@ -2,8 +2,7 @@
 
 from __future__ import division
 from optparse import OptionParser
-import sys, os, glob, random, math, util, pdb, sys
-import scimm
+import sys, os, glob, random, math, util, pdb, sys, shutil
 
 ############################################################
 # imm_cluster.py
@@ -11,10 +10,12 @@ import scimm
 # Perform IMM clustering on a set of seuqneces.
 ############################################################
 
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
 max_iter = 200
 use_priors = True
 like_decrease_t = 5
-rsments_t = .0005
+rsments_t = .002
 soft_assign_t = .01
 
 ############################################################
@@ -107,9 +108,8 @@ def main():
 
     # take max
     for i in range(k):
-        os.system('mv cluster-%d.max cluster-%d.fa' % (i,i))
+        os.rename('cluster-%d.max'%i, 'cluster-%d.fa'%i)
 
-    #os.system('rm *.tmp cluster-*.build.fa')
 
 ############################################################
 # train_imm
@@ -121,9 +121,9 @@ def train_imm(k, soft_assign, par):
     cmds = []
     for i in range(k):
         if soft_assign:
-            cmds.append('%s/em_build-icm -p 1 cluster-%d.icm < cluster-%d.build.fa' % (scimm.scimm_bin,i,i))
+            cmds.append('%s/em_build-icm -p 1 cluster-%d.icm < cluster-%d.build.fa' % (bin_dir,i,i))
         else:
-            cmds.append('%s/build-icm -p 1 cluster-%d.icm < cluster-%d.fa' % (scimm.scimm_bin,i,i))
+            cmds.append('%s/build-icm -p 1 cluster-%d.icm < cluster-%d.fa' % (bin_dir,i,i))
 
     util.exec_par(cmds, par)
 
@@ -136,7 +136,7 @@ def train_imm(k, soft_assign, par):
 def score_reads(k, readsf, par):
     cmds = []
     for c in range(k):
-        cmds.append('%s/simple-score -N cluster-%d.icm < %s > icm-%d.scores.tmp 2>/dev/null' % (scimm.scimm_bin,c,readsf,c))
+        cmds.append('%s/simple-score -N cluster-%d.icm < %s > icm-%d.scores.tmp 2>/dev/null' % (bin_dir,c,readsf,c))
     
     util.exec_par(cmds, par)
 
@@ -209,7 +209,7 @@ def reassign_reads(readsf, priors, mates, constraints, soft_assign, initial_seed
 
     # move tmp
     for i in range(k):
-        os.system('mv cluster-%d.tmp cluster-%d.fa' % (i,i))
+        os.rename('cluster-%d.tmp'%i, 'cluster-%d.fa'%i)
 
     return (rsments,likelihood,priors)
 
@@ -429,7 +429,7 @@ def correct_partition_simXC(reads_dir, k):
     # split reads into new files
     cf = 0
     for readf in read_files:
-        os.system('cp %s cluster-%d.fa' % (readf,cf))
+        shutil.copy(readf, 'cluster-%d.fa'%cf)
         cf += 1
         
 
@@ -449,7 +449,7 @@ def seed_partition(readsf, k, mates, constraints, soft_assign, par):
     score_reads(k, readsf, par)
 
     # check scores and partition
-    os.system('cp %s cluster-0.fa' % readsf)
+    shutil.copy(readsf, 'cluster-0.fa')
     (rsments, likelihood, priors) = reassign_reads(readsf, [1.0/k]*k, mates, constraints, soft_assign, True)
 
     return(likelihood,priors)
@@ -543,11 +543,10 @@ def verify_constraints(k, constraints):
 
     # move clusters to their matching constraint number
     for c in range(k):
-        os.system('mv cluster-%d.fa cluster-%d.tmp.fa' % (c,cluster_map[c]))
+        os.rename('cluster-%d.fa'%c, 'cluster-%d.tmp.fa'%cluster_map[c])
     for c in range(k):
-        os.system('mv cluster-%d.tmp.fa cluster-%d.fa' % (c,c))
-                  
-                            
+        os.rename('cluster-%d.tmp.fa'%c, 'cluster-%d.fa'c)
+
 
 ############################################################
 # filter_empty
@@ -568,14 +567,16 @@ def filter_empty(k, priors, constraints):
 
         # rename all following clusters by 1, update priors
         if c+1 >= k:
-            os.system('rm cluster-%d.fa cluster-%d.icm icm-%d.scores.tmp' % (c,c,c))
+            os.remove('cluster-%d.fa'%c)
+            os.remove('cluster-%d.icm'%c)
+            os.remove('icm-%d.scores.tmp'c)
         else:
             for i in range(c+1,k):
-                os.system('mv cluster-%d.fa cluster-%d.fa' % (i,i-1))
-                os.system('mv cluster-%d.icm cluster-%d.icm' % (i,i-1))
-                os.system('mv icm-%d.scores.tmp icm-%d.scores.tmp' % (i,i-1))
+                os.rename('cluster-%d.fa'%i, 'cluster-%d.fa'%(i-1))
+                os.rename('cluster-%d.icm'%i, 'cluster-%d.icm'%(i-1))
+                os.rename('icm-%d.scores.tmp'%i, 'icm-%d.scores.tmp'%(i-1))
                 if os.path.isfile('cluster-%d.max' % i):
-                    os.system('mv cluster-%d.max cluster-%d.max' % (i,i-1))
+                    os.rename('cluster-%d.max'%i, 'cluster-%d.max'%(i-1))
                 priors[i-1] = priors[i]
 
         # update constraints
@@ -653,7 +654,7 @@ class Progress:
         if not self.max_like or like > self.max_like:
             # save current as max
             for i in range(self.k):
-                os.system('cp cluster-%d.fa cluster-%d.max' % (i,i))
+                shutil.copy('cluster-%d.fa'%i, 'cluster-%d.max'%i)
 
         if self.like_decr >= like_decrease_t:
             return False

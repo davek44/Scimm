@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys
+import os, sys, subprocess
 
 ############################################################
 # install_physcimm.py
@@ -21,35 +21,46 @@ def main():
 
     installdir = os.getcwd()
 
-    # IMM code
+    # compile IMM code
     os.chdir('glimmer3.02/src')
-    os.system('make clean; make')
-    os.chdir('../..')
-    if not os.path.isfile('bin/simple-score'):
-        os.chdir('bin')
-        os.system('ln -s ../glimmer3.02/bin/simple-score')
-        os.chdir('..')
-    if not os.path.isfile('bin/build-icm'):
-        os.chdir('bin')
-        os.system('ln -s ../glimmer3.02/bin/build-icm')
-        os.chdir('..')
-    
-    # Scimm
-    os.system('sed \'s,scimm_bin = "[a-zA-Z/]*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir) 
-    os.system('mv sc.tmp bin/scimm.py')
+    p = subprocess.Popen('make clean; make', shell=True)
+    os.waitpid(p.pid,0)
 
-    # Phymm
-    os.system('sed \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py ph.tmp' % installdir) 
-    os.system('mv ph.tmp bin/physcimm.py')
+    os.chdir('../..')
+
+    # set IMM links
+    if not os.path.isfile('bin/simple-score'):
+        os.symlink('../glimmer3.02/bin/simple-score','bin/simple-score')
+    if not os.path.isfile('bin/build-icm'):
+        os.symlink('../glimmer3.02/bin/build-icm', 'bin/build-icm')
+    
+    # set scimm bin variable
+    p = subprocess.Popen('sed \'s,scimm_bin = ".*",scimm_bin = "%s/bin",\' bin/scimm.py > sc.tmp' % installdir, shell=True)
+    os.waitpid(p.pid, 0)
+    os.rename('sc.tmp', 'bin/scimm.py')
+    p = subprocess.Popen('chmod ug+x bin/scimm.py', shell=True)
+    os.waitpid(p.pid,0)
+
+    # set physcimm bin variable
+    p = subprocess.Popen('sed \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py ph.tmp' % installdir, shell=True)
+    os.waitpid(p.pid, 0)
+    os.rename('ph.tmp', 'bin/physcimm.py')
+    p = subprocess.Popen('chmod ug+x bin/physcimm.py', shell=True)
+    os.waitpid(p.pid,0)
+
     if prior_phymm_dir:
-        os.system('ln -s %s phymm' % prior_phymm_dir)
+        if os.path.islink(prior_phymm_dir):
+            os.remove(prior_phymm_dir)
+        os.symlink(prior_phymm_dir,'phymm')
     else:
         os.mkdir('phymm')
         os.chdir('phymm')
-        os.system('curl -o phymmInstaller.tar.gz http://www.cbcb.umd.edu/software/phymm/phymmInstaller.tar.gz')
-        os.system('tar -xzvf phymmInstaller.tar.gz')
-        os.system('./phymmSetup.pl')
-        os.chdir('..')
+        p = subprocess.Popen('curl -o phymmInstaller.tar.gz http://www.cbcb.umd.edu/software/phymm/phymmInstaller.tar.gz', shell=True)
+        os.waitpid(p.pid, 0)
+        p = subprocess.Popen('tar -xzvf phymmInstaller.tar.gz', shell=True)
+        os.waitpid(p.pid, 0)
+        p = subprocess.Popen('./phymmSetup.pl', shell=True)
+        os.waitpid(p.pid, 0)
 
 
 ############################################################

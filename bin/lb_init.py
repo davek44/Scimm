@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 import os, glob, util, subprocess, pdb
-import scimm, imm_cluster, dna
+import imm_cluster, dna
 
 ############################################################
 # lb_init.py
@@ -11,6 +11,11 @@ import scimm, imm_cluster, dna
 # run of imm_cluster
 ############################################################
 
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+############################################################
+# main
+############################################################
 def main():
     parser = OptionParser()
 
@@ -36,10 +41,13 @@ def main():
     if options.numreads and options.numreads < total_reads:
         dna.fasta_rand_big(options.numreads, options.readsf, 'sample.fa')
     else:
-        os.system('ln -s %s sample.fa' % options.readsf)
+        if os.path.isfile('sample.fa') or os.path.islink('sample.fa'):
+            os.remove('sample.fa')
+        os.symlink(options.readsf, 'sample.fa')
 
     # LikelyBin
-    os.system('%s/mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d &> lb.log' % (scimm.scimm_bin,options.k, options.order, options.proc))
+    p = subprocess.Popen('%s/mcmc.pl sample.fa -num_sources %d -chain_order %d -num_threads %d &> lb.log' % (bin_dir,options.k, options.order, options.proc), shell=True)
+    os.waitpid(p.pid, 0)
 
     if os.path.isfile('sample.fa.binning.allprobs') and os.path.getsize('sample.fa.binning.allprobs') > 0:
 
@@ -50,7 +58,9 @@ def main():
         new_k = drop_empty(options.k, options.soft_assign)
     
         # run seed_only
-        os.system('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s >> lb.log' % (scimm.scimm_bin, new_k, options.readsf, options.proc, em))
+        p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -s --seed_only %s >> lb.log' % (bin_dir, new_k, options.readsf, options.proc, em), shell=True)
+        os.waitpid(p.pid, 0)
+
 
 ############################################################
 # init_clusters.py
@@ -179,7 +189,7 @@ def drop_empty(k, soft_assign):
             nef = 'cluster-%d.fa' % nonempty[-1]
     
         if empty[i] < nonempty[-1]:
-            os.system('mv %s %s' % (nef,ef))
+            os.rename(nef,ef)
         
         #nonempty = nonempty[:-1]
         nonempty[-1] = empty[i]

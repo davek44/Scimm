@@ -13,6 +13,8 @@ import scimm, util, dna
 ############################################################
 
 phymmdir = '/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/phymm'
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
 
 ############################################################
 # main
@@ -79,7 +81,7 @@ def main():
         else:
             bc_str = ''
             phymm_results_file = 'results.03.phymmBL_sample_fa.txt'
-        p = subprocess.Popen('phymm_par.py -p %d %s --phymm %s sample.fa' % (options.proc,bc_str,phymmdir), shell=True)
+        p = subprocess.Popen('%s/phymm_par.py -p %d %s --phymm %s sample.fa' % (bin_dir, options.proc,bc_str,phymmdir), shell=True)
         os.waitpid(p.pid, 0)
 
     # determine minimum bp for cluster
@@ -94,7 +96,7 @@ def main():
 
     # run IMM clustering
     if not options.init:
-        p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> immc.log' % (scimm.scimm_bin,class_k, options.readsf, options.proc, em), shell=True)
+        p = subprocess.Popen('%s/imm_cluster.py -k %d -r %s -p %d -s %s &> immc.log' % (bin_dir, class_k, options.readsf, options.proc, em), shell=True)
         os.waitpid(p.pid, 0)
         
 
@@ -147,14 +149,15 @@ def init_clusters(readsf, phymm_results_file, taxlevel, minbp, soft_assign):
         a[-1] = a[-1].rstrip()
 
         if a[0] != 'QUERY_ID' and a[col]: # some species are missing classifications
-            header = phymm2true[a[0]]
+            if phymm2true.has_key(a[0]): # results file is allowed to have extra sequences
+                header = phymm2true[a[0]]
 
-            if clusters.has_key(a[col]):
-                clusters[a[col]].append(header)
-                clustbp[a[col]] += readbp[header]
-            else:
-                clusters[a[col]] = [header]
-                clustbp[a[col]] = readbp[header]
+                if clusters.has_key(a[col]):
+                    clusters[a[col]].append(header)
+                    clustbp[a[col]] += readbp[header]
+                else:
+                    clusters[a[col]] = [header]
+                    clustbp[a[col]] = readbp[header]
 
     # extra cluster for deleted classes
     clusters['extra'] = []

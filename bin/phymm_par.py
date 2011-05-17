@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-from optparse import OptionParser
-import os, random, subprocess, time
+from optparse import OptionParser, SUPPRESS_HELP
+import os, random, subprocess, time, sys
 
 ################################################################################
-# phymm_parallel.py
+# phymm_par.py
 #
 # Run phymm in parallel by parallelizing over ICMs rather than splitting up the
 # input file.  This is better than splitting up the sequence file because
@@ -13,6 +13,9 @@ import os, random, subprocess, time
 # Requires my version of Phymm that takes the '-i' option.
 ################################################################################
 
+bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+phymm_dir = os.path.abspath('%s/../phymm' % bin_dir)
+
 ################################################################################
 # main
 ################################################################################
@@ -20,11 +23,13 @@ def main():
     usage = 'usage: %prog [options] <seqs_file>'
     parser = OptionParser(usage)
     parser.add_option('-p', dest='proc', type='int', default=2, help='Number of processes to run [default: %default]')
-    parser.add_option('--condor', dest='condor', action='store_true', default=False, help='Run on CONDOR grid [default: %default]')
     parser.add_option('-b', dest='no_blast', action='store_true', default=False, help='Do not run BLAST')
     parser.add_option('-c', dest='chr_only', action='store_true', default=False, help='Score with only chromosomes, not plasmids')
-    parser.add_option('--phymm', dest='phymmdir', default='/fs/szasmg3/dakelley/phymm3', help='Phymm directory path')
     parser.add_option('-i', dest='ignore_file', help='File of IMMs to ignore')
+
+    # help='Run on CONDOR grid'
+    parser.add_option('--condor', dest='condor', action='store_true', default=False, help=SUPPRESS_HELP)
+
     (options,args) = parser.parse_args()
 
     if len(args) != 1 or not os.path.isfile(args[0]):
@@ -34,7 +39,7 @@ def main():
 
     # move to phymm directory
     origdir = os.getcwd()
-    os.chdir(options.phymmdir)
+    os.chdir(phymm_dir)
 
     # get ICMs
     icms = sorted(os.listdir('.genomeData'))
@@ -159,7 +164,8 @@ def build_cmds_imm(seqsf, ignoref, icms, options):
     (prefix,suffix) = os.path.splitext(seqsf)
     rc_seqsf = prefix + '.revComp' + suffix
     if not os.path.isfile(rc_seqsf):
-        os.system('.scripts/revCompFASTA.pl %s' % seqsf)
+        p = subprocess.Popen('.scripts/revCompFASTA.pl %s' % seqsf, shell=True)
+        os.waitpid(p.pid, 0)
 
     # work out ICM ranges
     icms_per = len(icms) / options.proc
@@ -189,7 +195,7 @@ def build_cmds_imm(seqsf, ignoref, icms, options):
         print >> ignore_out, '\n'.join(ignore_icms)
         ignore_out.close()
 
-        cmds.append('scoreReadsScimm.pl seqs_%d.fa %s %s -i ignore_%d.txt' % (pids[p],dash_b,dash_c,pids[p]))
+        cmds.append('%s/scoreReadsScimm.pl seqs_%d.fa %s %s -i ignore_%d.txt' % (bin_dir,pids[p],dash_b,dash_c,pids[p]))
 
     return (cmds,pids)
 
@@ -250,7 +256,7 @@ def build_cmds_seq(seqsf, ignoref, icms, options):
 
     cmds = []
     for p in range(options.proc):
-        cmds.append('scoreReadsScimm.pl seqs_%d.fa %s %s' % (pids[p],dash_b,dash_c))
+        cmds.append('%s/scoreReadsScimm.pl seqs_%d.fa %s %s' % (bin_dir,pids[p],dash_b,dash_c))
 
     return cmds, pids
 
