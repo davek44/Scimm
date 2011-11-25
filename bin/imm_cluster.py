@@ -545,7 +545,7 @@ def verify_constraints(k, constraints):
     for c in range(k):
         os.rename('cluster-%d.fa'%c, 'cluster-%d.tmp.fa'%cluster_map[c])
     for c in range(k):
-        os.rename('cluster-%d.tmp.fa'%c, 'cluster-%d.fa'c)
+        os.rename('cluster-%d.tmp.fa'%c, 'cluster-%d.fa'%c)
 
 
 ############################################################
@@ -569,7 +569,7 @@ def filter_empty(k, priors, constraints):
         if c+1 >= k:
             os.remove('cluster-%d.fa'%c)
             os.remove('cluster-%d.icm'%c)
-            os.remove('icm-%d.scores.tmp'c)
+            os.remove('icm-%d.scores.tmp'%c)
         else:
             for i in range(c+1,k):
                 os.rename('cluster-%d.fa'%i, 'cluster-%d.fa'%(i-1))

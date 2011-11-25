@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from optparse import OptionParser, SUPPRESS_HELP
-import os, glob, subprocess, math, shutil
+import os, glob, subprocess, sys, math, shutil
 import imm_cluster, util
 
 ############################################################
@@ -11,7 +11,7 @@ import imm_cluster, util
 # Author: David Kelley
 ############################################################
 
-scimm_bin = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/bin"
+scimm_bin = "/Users/dk/research/umd/metagenomics_clustering/Scimm/bin"
 bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 if 'PYTHONPATH' in os.environ:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
-import os, glob, subprocess
+import os, glob, subprocess, sys
 import dna
 
 ############################################################
