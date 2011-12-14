@@ -188,9 +188,9 @@ def minentropy_clusters(total_starts, readsf, k, soft_assign):
     (min_entropy, min_clust) = util.min_i(entropy)
 
     # get files from min
-    for c in range(len(glob.glob('cluster-*.fa'))):
+    for c in range(len(glob.glob('tmp.start%d/cluster-*.fa' % min_clust))):
         shutil.copy('tmp.start%d/cluster-%d.fa' % (min_clust,c), 'cluster-%d.fa' % c)
-        shutil.copy('tmp.start%d/icm-%dscores.tmp' % (min_clust,c), 'icm-%dscores.tmp' % c)
+        shutil.copy('tmp.start%d/icm-%d.scores.tmp' % (min_clust,c), 'icm-%d.scores.tmp' % c)
 
 
 ############################################################
