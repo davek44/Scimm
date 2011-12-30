@@ -12,7 +12,7 @@ import scimm, util, dna
 # Author: David Kelley
 ############################################################
 
-phymmdir = '/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/phymm'
+phymmdir = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/phymm"
 bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 

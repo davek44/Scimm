@@ -42,7 +42,7 @@ def main():
     os.waitpid(p.pid,0)
 
     # set physcimm bin variable
-    p = subprocess.Popen('sed \'s,phymmdir = "[a-zA-Z/]*",phymmdir = "%s/phymm",\' bin/physcimm.py > ph.tmp' % installdir, shell=True)
+    p = subprocess.Popen('sed \'s,phymmdir = ".*",phymmdir = "%s/phymm",\' bin/physcimm.py > ph.tmp' % installdir, shell=True)
     os.waitpid(p.pid, 0)
     os.rename('ph.tmp', 'bin/physcimm.py')
     p = subprocess.Popen('chmod ug+x bin/physcimm.py', shell=True)
