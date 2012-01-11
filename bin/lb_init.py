@@ -125,38 +125,47 @@ def init_clusters(readsf, soft_assign):
                         if r != m:
                             soft_clusters[m].append((i,prob))
 
-    # open files
-    init_files = []
-    build_files = []
-    for c in range(k):
-        init_files.append(open('cluster-%d.fa' % c, 'w'))
-        if soft_assign:
-            build_files.append(open('cluster-%d.build.fa' % c, 'w'))
-        
-    # read fasta to cluster-*.fa
-    for line in open(readsf):
-        if line[0] == '>':
-            r = line[1:].strip()  # front spaces are removed by LikelyBin
-            if hard_clusters.has_key(r):
-                hc = hard_clusters[r]
-                init_files[hc].write(line)
-                if soft_assign:
-                    for (sc,p) in soft_clusters[r]:
-                        build_files[sc].write('>%f;%s' % (p,line[1:]))
-            else:
-                hc = -1
-
-        elif hc != - 1:
-            init_files[hc].write(line)
+    chunk_size = 50
+    chunk_i = 0
+    while chunk_i*chunk_size < k:
+        # open files
+        init_files = {}
+        build_files = {}
+        for c in range(chunk_i*chunk_size, min(k, (chunk_i+1)*chunk_size)):
+            init_files[c] = open('cluster-%d.fa' % c, 'w')
             if soft_assign:
-                for (sc,p) in soft_clusters[r]:
-                    build_files[sc].write(line)
+                build_files[c] = open('cluster-%d.build.fa' % c, 'w')
 
-    # close files
-    for c in range(k):
-        init_files[c].close()
-        if soft_assign:
-            build_files[c].close()
+        # read fasta to cluster-*.fa
+        for line in open(readsf):
+            if line[0] == '>':
+                r = line[1:].strip()  # front spaces are removed by LikelyBin
+                if hard_clusters.has_key(r):
+                    hc = hard_clusters[r]
+                    if init_files.has_key(hc):
+                        init_files[hc].write(line)
+                        if soft_assign:
+                            for (sc,p) in soft_clusters[r]:
+                                build_files[sc].write('>%f;%s' % (p,line[1:]))
+                else:
+                    hc = -1
+
+            elif hc != -1:
+                if init_files.has_key(hc):
+                    init_files[hc].write(line)
+                    if soft_assign:
+                        for (sc,p) in soft_clusters[r]:
+                            build_files[sc].write(line)
+
+        # close files
+        for c in init_files:
+            init_files[c].close()
+            if soft_assign:
+                build_files[c].close()
+
+        # increment
+        chunk_i += 1
+
 
 ############################################################
 # drop_empty
@@ -190,10 +199,10 @@ def drop_empty(k, soft_assign):
     
         if empty[i] < nonempty[-1]:
             os.rename(nef,ef)
-        
-        #nonempty = nonempty[:-1]
-        nonempty[-1] = empty[i]
-        nonempty.sort()
+            nonempty[-1] = empty[i]
+            nonempty.sort()
+        else:
+            os.remove(ef)
 
     return k - len(empty)
 
