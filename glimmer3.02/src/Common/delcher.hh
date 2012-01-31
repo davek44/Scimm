@@ -22,8 +22,8 @@
 #include  <errno.h>
 #include  <getopt.h>
 #include  <limits.h>
+#include  <string.h>
 #include  <algorithm>
-#include  <string>
 #include  <new>
 #include  <cstdlib>
 #include  <iostream>
