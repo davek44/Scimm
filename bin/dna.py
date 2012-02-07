@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-
-# no __future__ division!
 import string, sys, math, random
 
 ############################################################
-# fasta
+# dna.py
 #
-# Common methods for dealing with fasta files
+# Common methods for working with DNA sequences
 ############################################################
 
 ############################################################
