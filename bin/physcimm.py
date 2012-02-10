@@ -12,7 +12,6 @@ import scimm, util, dna
 # Author: David Kelley
 ############################################################
 
-phymmdir = "/fs/szasmg/dakelley/classes/metagenomics/software/Scimm/phymm"
 bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 
@@ -81,7 +80,7 @@ def main():
         else:
             bc_str = ''
             phymm_results_file = 'results.03.phymmBL_sample_fa.txt'
-        p = subprocess.Popen('%s/phymm_par.py -p %d %s --phymm %s sample.fa' % (bin_dir, options.proc,bc_str,phymmdir), shell=True)
+        p = subprocess.Popen('%s/phymm_par.py -p %d %s sample.fa' % (bin_dir, options.proc,bc_str), shell=True)
         os.waitpid(p.pid, 0)
 
     # determine minimum bp for cluster
